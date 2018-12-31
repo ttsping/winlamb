@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Article Source</title>
+<link rel="stylesheet" type="text/css" href="ar-source_arquivos/Main.css">
+<!-- base href="https://www.codeproject.com/KB/vista/" -->
+</head>
+<body>
+<!--
+HTML for article "WinLamb: using C++11 lambdas to handle Win32 messages" by Rodrigo Cesar de Freitas Dias
+URL: https://www.codeproject.com/KB/vista/1184175.aspx
+Copyright 2017 by Rodrigo Cesar de Freitas Dias
+All formatting, additions and alterations Copyright © CodeProject, 1999-2018
+-->
+
+
+
+<p><b>Please choose 'View Source' in your browser to view the HTML, or File | Save to save this
+file to your hard drive for editing.</b></p>
+
+<hr class="Divider subdue">
+<div>
+
+
+
+
+<!-- Start Article -->
+<span id="ArticleContent">
+
+
+<h2>Contents</h2>
+
+<ol>
+  <li><a href="#section1">Spoilers</a></li>
+  <li><a href="#section2">Getting started</a>
+    <ol>
+      <li><a href="#section2.1">Concept</a></li>
+      <li><a href="#section2.2">Technical considerations</a></li>
+      <li><a href="#section2.3">Setting up a new project</a></li>
+    </ol>
+  </li>
+  <li><a href="#section3">Creating and using windows</a>
+    <ol>
+      <li><a href="#section3.1">Creating the main window</a></li>
+      <li><a href="#section3.2">Handling messages</a></li>
+      <li><a href="#section3.3">Dialog as main window</a></li>
+      <li><a href="#section3.4">Using controls</a></li>
+      <li><a href="#section3.5">A modal popup dialog</a></li>
+      <li><a href="#section3.6">A modeless popup dialog</a></li>
+      <li><a href="#section3.7">A custom control</a></li>
+      <li><a href="#section3.8">Dialog as a control</a></li>
+    </ol>
+  </li>
+  <li><a href="#section4">Cracking messages</a>
+    <ol>
+      <li><a href="#section4.1">Command and notify handling</a></li>
+      <li><a href="#section4.2">Message parameters unpacked</a></li>
+      <li><a href="#section4.3">Unpacking common control notifications</a></li>
+    </ol>
+  </li>
+  <li><a href="#section5">Subclassing controls</a>
+    <ol>
+      <li><a href="#section5.1">Installation and message handling</a></li>
+    </ol>
+  </li>
+  <li><a href="#section6">Final topics</a>
+    <ol>
+      <li><a href="#section6.1">Window types summary</a></li>
+      <li><a href="#section6.2">Default message processing</a></li>
+      <li><a href="#section6.3">What’s next?</a></li>
+    </ol>
+  </li>
+  <li><a href="#section7">Article history</a></li>
+</ol>
+
+<h2><a id="section1"></a>1. Spoilers</h2>
+
+<p>First of all, this article assumes the reader is familiar with native <a href="https://en.wikipedia.org/wiki/Win32">Win32</a> programming and C++11.</p>
+
+<p>Before explaining what it is, I’ll start showing what a Win32 program can look like with <a href="https://github.com/rodrigocfd/winlamb">WinLamb</a>. The following is a <i>full</i> program with a single window. Note that there’s no message loop, no window class registering, no switch statement or message maps. And two messages are handled, each with a C++11 lambda:</p>
+
+<pre lang="C++">// Declaration: SimpleMainWindow.h
+
+#include "winlamb/window_main.h"
+class SimpleMainWindow : public wl::window_main {
+public:
+  SimpleMainWindow();
+};</pre>
+
+<pre lang="C++">// Implementation: SimpleMainWindow.cpp
+
+#include "SimpleMainWindow.h"
+RUN(SimpleMainWindow);
+
+SimpleMainWindow::SimpleMainWindow()
+{
+  setup.wndClassEx.lpszClassName = L"SOME_CLASS_NAME";
+  setup.title = L"This is my window";
+  setup.style |= wl::ws::MINIMIZEBOX;
+
+  on_message(WM_CREATE, [&amp;](wl::params p)-&gt;LRESULT
+  {
+    set_text(L"A new title for the window");
+    return 0;
+  });
+
+  on_message(WM_LBUTTONDOWN, [&amp;](wl::params p)-&gt;LRESULT
+  {
+    set_text(L"Window clicked!");
+    return 0;
+  });
+}</pre>
+
+<p>To compile this code, you’ll need a C++11 compiler. All examples on this article have been compiled and tested with Visual C++ 2017.</p>
+
+<h2><a id="section2"></a>2. Getting started</h2>
+
+<h3><a id="section2.1"></a>2.1. Concept</h3>
+
+<p>The raw &amp; usual way to create a native Windows <a href="https://en.wikipedia.org/wiki/C_(programming_language)">C program</a> is described in depth by Charles Petzold in his classic <a href="http://www.charlespetzold.com/pw5/">Programming Windows</a> book. Since then, many object-oriented libraries – like <a href="https://en.wikipedia.org/wiki/Microsoft_Foundation_Class_Library">MFC</a> and <a href="https://en.wikipedia.org/wiki/Windows_Template_Library">WTL</a> – have been written offering C++ approaches to deal with native Windows programming.</p>
+
+<p><a href="https://github.com/rodrigocfd/winlamb">WinLamb</a> – an
+uninspired acronym of Windows and lambda – is another object-oriented
+C++ library. It’s a header-only library which depends on nothing but
+pure Win32 and the <a href="https://en.wikipedia.org/wiki/Standard_Template_Library">C++ Standard Template Library</a>, and it heavily relies upon modern C++11 features (well, actually C++14 and C++17 too).</p>
+
+<p>WinLamb is a thin layer over Win32 API. It can be divided into three main parts:</p>
+
+<ol>
+  <li>Window management: the infrastructure which allows you to create several types of windows and use lambdas to handle their messages – this is the most import part of the library;</li>
+  <li>Basic wrappers to most native Windows controls like edit box, listview, etc.;</li>
+  <li>Utility classes like file I/O, device context, internet download, <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms680573(v=vs.85).aspx">COM</a> wrappers, etc.</li>
+</ol>
+
+<p>On the list above, (2) and (3) are optional. If you have another library or your own set of classes, you can use them instead.</p>
+
+<h3><a id="section2.2"></a>2.2. Technical considerations</h3>
+
+<p>WinLamb is fully implemented using <a href="http://stackoverflow.com/a/956548/6923555">Unicode Win32</a>, with <code>wchar_t</code> and <code>std::wstring</code> everywhere.</p>
+
+<p>Installation is pretty straightforward: since the library is head-only, you just need to download the files and <code>#include</code> them in your project. They should work right away. All the classes are enclosed within <code>wl</code> namespace.</p>
+
+<p>Since it heavily relies upon C++11 and even some C++14 and C++17 features, you need a compatible C++ compiler. Current version was developed and tested with Visual C++ 2017.</p>
+
+<p>Errors are reported by throwing exceptions. WinLamb doesn’t have any custom exception, it only throws <a href="http://en.cppreference.com/w/cpp/error/exception">ordinary STL exceptions</a>. All exceptions inherit from <code>std::exception</code>, so if you catch it, you’re guaranteed to catch any possible exception from WinLamb.</p>
+
+<p>Last but not least: WinLamb isn’t an excuse to <i>not</i> learn Win32 – before start using WinLamb, I strongly advice the reader to learn the basics on how to write a Win32 program using plain C.</p>
+
+<p>WinLamb source is <a href="https://github.com/rodrigocfd/winlamb">available on GitHub</a> as open-source under the <a href="https://opensource.org/licenses/MIT">MIT license</a>.</p>
+
+<h3><a id="section2.3"></a>2.3. Setting up a new project</h3>
+
+<p>WinLamb is a header-only C++ library. The most up-do-date code can be found <a href="https://github.com/rodrigocfd/winlamb">at GitHub</a>, you can clone the repository or simply download the files.</p>
+
+<p>The simplest way to have the library in your project is simply keep
+all the files in a subfolder called, for example, “winlamb”, then <code>#include</code> them in your sources.</p>
+
+<p>Here it is presented how to create a fresh new WinLamb Win32 project
+using Visual C++ IDE, from scratch. You can skip this section <a href="#section3">straight into the code</a>.</p>
+
+<p>To start, first create the new project:</p>
+
+<p><img src="ar-source_arquivos/i01-new-project.png" width="600" height="328"></p>
+
+<p>Choose “Windows Desktop Wizard”. The “.NET Framework” option doesn”t
+matter, since we”re writing a pure Win32 program, without the .NET
+Framework. Here, I named the project “example1”.</p>
+
+<p><img src="ar-source_arquivos/i02-desktop-wizard.png" width="650" height="442"></p>
+
+<p>Choose “Windows Application”. Uncheck everything but “Empty project”. This will create a completely empty project for us.</p>
+
+<p><img src="ar-source_arquivos/i03-empty-project.png" width="512" height="336"></p>
+
+<p>Finally, create a subdirectory named, for example, “winlamb”, and put WinLamb files there. Then create your source files normally; you should be able to include WinLamb files now:</p>
+
+<p><img src="ar-source_arquivos/i04-include-winlamb.png" width="655" height="221"></p>
+
+<p>Notice that the library has an “internals” subdirectory. This is where all internal library files are located; you shouldn’t need to touch these.</p>
+
+<h2><a id="section3"></a>3. Creating and using windows</h2>
+
+<p>Once the project is ready, it’s time to use WinLamb to wrap up our windows.</p>
+
+<h3><a id="section3.1"></a>3.1. Creating the main window</h3>
+
+<p>Under the most common cases, the first thing you must design when creating a Win32 program is the main window. So let’s start with the declaration of the main window class – in WinLamb, each window has a class. It’s a good idea to have 1 header and (at least) 1 source file for each window. Technically the main window doesn’t need a header, but for consistency, let’s write one.</p>
+
+<p>All WinLamb library classes belong to the <code>wl</code> namespace. Our main window class will inherit from <code>window_main</code> class. Let’s also declare the constructor:</p>
+
+<pre lang="C++">// Declaration: MyWindow.h
+
+#include "winlamb/window_main.h"
+
+class MyWindow : public wl::window_main {
+public:
+  MyWindow();
+};</pre>
+
+<p>For the program entry point, you can write your <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms633559(v=vs.85).aspx">WinMain</a> function and instantiate <code>MyWindow</code> manually, if you want. However, if you aren’t doing anything special on WinMain, you can simply use WinLamb’s <code>RUN</code> macro – the only macro in the whole library, I promise –, which will simply expand into a WinMain call instantiating your class on the stack. This is the macro call:</p>
+
+<pre lang="C++">RUN(MyWindow);</pre>
+
+<p>And then implement the class constructor. Thus, that’s what we have in our source file, so far:</p>
+
+<pre lang="C++">// Implementation: MyWindow.cpp
+
+#include "MyWindow.h"
+RUN(MyWindow); // will generate a WinMain function
+
+MyWindow::MyWindow()
+{
+}</pre>
+
+<p>If you compile and run this code, the window will fail to show, because we didn’t specify the <a href="https://docs.microsoft.com/en-us/windows/desktop/winmsg/using-window-classes">window class name</a>. When the class is instantiated, the base <code>window_main</code> will call <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-registerclassexw">RegisterClassEx</a> internally, and it will use a <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/ns-winuser-wndclassexw">WNDCLASSEX</a> structure with a few predetermined values – these values, however, <i>don’t</i> specify the class name to be registered.</p>
+
+<p>The base class provides a <code>setup</code> member variable which holds all initialization values for the class. To an experienced Win32 programmer, the members of this structure will be familiar: they are the parameters of the <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-createwindowexw">CreateWindowEx</a> function, plus the <code>wndClassEx</code> member, which is the WNDCLASSEX structure, which is passed to RegisterClassEx. This <code>wndClassEx</code> member, however, hides the members that are internally set by WinLamb.</p>
+
+<p>Thus, we must define the class name at <code>lpszClassName</code> member, and do this inside the constructor:</p>
+
+<pre lang="C++">// Implementation: MyWindow.cpp
+
+#include "MyWindow.h"
+RUN(MyWindow);
+
+MyWindow::MyWindow()
+{
+  setup.wndClassEx.lpszClassName = L"HAPPY_LITTLE_CLASS_NAME";
+}</pre>
+
+<p>The <code>wndClassEx</code> member has <code>style</code>, and <code>setup</code> itself has <code>style</code> and <code>exStyle</code>. These two <a href="https://en.cppreference.com/w/cpp/language/enum">scoped enumerations</a> are already filled with default flags, specified by WinLamb:</p>
+
+<pre lang="C++">setup.wndClassEx.style = wl::wc::DBLCLKS;
+setup.style = wl::ws::CAPTION | wl::ws::SYSMENU | wl::ws::CLIPCHILDREN | wl::ws::BORDER;</pre>
+
+<p>You can overwrite these values, of course. However, they are common to most windows, and most of the time you’ll just want to add a flag. For example, if you want your main window to be resizable and minimizable, you just need this:</p>
+
+<pre lang="C++">setup.style |= (wl::ws::SIZEBOX | wl::ws::MINIMIZEBOX);</pre>
+
+<p>Therefore, also adding the window title, we have:</p>
+
+<pre lang="C++">// Implementation: MyWindow.cpp
+
+#include <span class="code-string">"MyWindow.h"
+</span>RUN(MyWindow);
+
+MyWindow::MyWindow()
+{
+  setup.wndClassEx.lpszClassName = L"HAPPY_LITTLE_CLASS_NAME";
+  setup.title = L"My first window";
+  setup.style |= (wl::ws::SIZEBOX | wl::ws::MINIMIZEBOX);
+}</pre>
+
+<p>The program should compile and run fine now. Yes, this is a fully functional Win32 program, including window class registering, window creation, message loop dispatching and final cleanup – all this infrastructure code is transparent.</p>
+
+<p>Note: WinLamb classes <a href="https://blogs.msdn.microsoft.com/oldnewthing/20140203-00/?p=1893">make use of Set/GetWindowLongPtr</a> with <code>GWLP_USERDATA</code> and <code>DWLP_USER</code> flags for storing context data. Since you have a class for your window, where you can have all the members you want, I can’t really imagine a reason for using these on your code, but I’m warning you just in case: <i>don’t</i> use <code>GWLP_USERDATA</code> and <code>DWLP_USER</code> to store your data.</p>
+
+<h3><a id="section3.2"></a>3.2. Handling messages</h3>
+
+<p>The traditional way to handle window messages is <a href="https://docs.microsoft.com/en-us/windows/desktop/winmsg/using-window-procedures">a big switch statement</a> inside the <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms633573(v=vs.85).aspx">WNDPROC</a> function. Some libraries define macros to avoid the “big switch”.</p>
+
+<p>In our program using WinLamb, we’ll use C++11 lambdas. The <code>window_main</code> base class provides the <code>on_message</code> member function, which receives two arguments: the message to be handled and a function to handle it:</p>
+
+<pre lang="C++">void on_message(UINT message, std::function&lt;LRESULT(wl::params)&gt;&amp;&amp; func);</pre>
+
+<p>The easiest way to use it is passing an unnamed lambda function inline. For example, let’s handle the <a href="https://docs.microsoft.com/en-us/windows/desktop/winmsg/wm-create">WM_CREATE</a> message in our main window class constructor:</p>
+
+<pre lang="C++">MyWindow::MyWindow()
+{
+  setup.wndClassEx.lpszClassName = L"HAPPY_LITTLE_CLASS_NAME";
+
+  on_message(WM_CREATE, [](wl::params p)-&gt;LRESULT
+  {
+    return 0;
+  });
+}</pre>
+
+<p>The lambda receives a <code>params</code> argument, which has the WPARAM and LPARAM members – more on this <a href="#section4.1">later</a>. Note that the lambda must return an LRESULT value, just like any ordinary WNDPROC message processing.</p>
+
+<p>Note: in an ordinary window, you would have to handle <a href="https://docs.microsoft.com/en-us/windows/desktop/winmsg/wm-destroy">WM_DESTROY</a> in order to call <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-postquitmessage">PostQuitMessage</a>. WinLamb implements default message processing for a few messages, using the default behavior, so you don’t have to worry about them. But they can be orverwritten if you need something specific – in the above example, if we write a handler to WM_DESTROY, the default library code would be completely <i>bypassed</i>. More on this <a href="#section6.2">later</a>.</p>
+
+<p>Now, if you happen to have two messages which will demand the same processing, <code>on_message</code> also accepts an <a href="http://en.cppreference.com/w/cpp/utility/initializer_list">initializer_list</a> as the first argument:</p>
+
+<pre lang="C++">on_message({WM_LBUTTONUP, WM_RBUTTONUP}, [](wl::params p)-&gt;LRESULT
+{
+  UINT currentMsg = p.message;
+  return 0;
+});</pre>
+
+<p>This is functionally equivalent of:</p>
+
+<pre lang="C++">switch (LOWORD(wParam))
+{
+  case WM_LBUTTONUP:
+  case WM_RBUTTONUP:
+    // some code...
+    return 0;
+}</pre>
+
+<p>Tip: if your window handles too many messages, the class constructor can become quite large and hard to follow. In these situations, breaking the handlers into member functions is helpful:</p>
+
+<pre lang="C++">// Declaration: MyWindow.h
+
+class MyWindow : public wl::window_main {
+public:
+  MyWindow();
+private:
+  void attachHandlers();
+  void evenMoreHandlers();
+};</pre>
+
+<pre lang="C++">// Implementation: MyWindow.cpp
+
+#include "MyWindow.h"
+RUN(MyWindow);
+
+MyWindow::MyWindow()
+{
+  setup.wndClassEx.lpszClassName = L"HAPPY_LITTLE_CLASS_NAME";
+
+  attachHandlers();
+  evenMoreHandlers();
+}
+
+void MyWindow::attachHandlers()
+{
+  on_message(WM_CREATE, [](wl::params p)-&gt;LRESULT
+  {
+    return 0;
+  });
+
+  on_message(WM_CLOSE, [](wl::params p)-&gt;LRESULT
+  {
+    return 0;
+  });
+}
+
+void MyWindow::evenMoreHandlers()
+{
+  on_message(WM_SIZE, [](wl::params p)-&gt;LRESULT
+  {
+    WORD width = LOWORD(p.lParam);
+    return 0;
+  });
+}</pre>
+
+<p>To finally work with the window, the <code>hwnd</code> member function can be used to retrieve the window’s HWND:</p>
+
+<pre lang="C++">on_message(WM_CREATE, [this](wl::params p)-&gt;LRESULT
+{
+  SetWindowText(hwnd(), L"New window title");
+  return 0;
+});</pre>
+
+<p>But there’s a <code>set_text</code> method available to be used within the window, so:</p>
+
+<pre lang="C++">on_message(WM_CREATE, [this](wl::params p)-&gt;LRESULT
+{
+  set_text(L"New window title");
+  return 0;
+});</pre>
+
+<h3><a id="section3.3"></a>3.3. Dialog as main window</h3>
+
+<p>In the previous example, we created an ordinary main window – in pure Win32, it would be the equivalent of calling <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-registerclassexw">RegisterClassEx</a> and <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-createwindowexw">CreateWindowEx</a>, among other proceedings.</p>
+
+<p>But it is also possible to have a <a href="http://www.codeproject.com/Articles/227831/A-dialog-based-Win-C-program">dialog box as the main window</a> of your program. This possibility is covered in WinLamb, if you inherit your main window from the <code>dialog_main</code> class:</p>
+
+<pre lang="C++">// Declaration: FirstDialog.h
+
+#include "winlamb/dialog_main.h"
+
+class FirstDialog : public wl::dialog_main {
+public:
+  FirstDialog();
+};</pre>
+
+<p>With dialogs you don’t deal with WNDCLASSEX directly, there’s no need to register a window class name. That’s why the <code>setup</code> member variable doesn’t have the <code>wndClassEx</code> member, instead it allows you to specify the ID of the <a href="https://docs.microsoft.com/en-us/windows/desktop/menurc/dialog-resource">dialog resource</a> to be loaded.</p>
+
+<p>Usually, dialog resources are created with resource editors, like the one Visual Studio has. An example of a dialog creation can be seen <a href="http://www.codeproject.com/Articles/227831/A-dialog-based-Win-C-program">here</a>. Now, assuming the dialog resource is already created, let’s use the dialog ID:</p>
+
+<pre lang="C++">// Implementation: FirstDialog.cpp
+
+#include "FirstDialog.h"
+#include "resource.h" // contains the dialog resource ID
+RUN(FirstDialog);
+
+FirstDialog::FirstDialog()
+{
+  setup.dialogId = IDD_MY_FIRST_DIALOG; // specify dialog ID
+
+  on_message(WM_INITDIALOG, [this](wl::params p)-&gt;INT_PTR
+  {
+    set_text(L"A new title for the dialog");
+    return TRUE;
+  });
+}</pre>
+
+<p>Here, <code>on_message</code> has some minor differences to follow the dialog box <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms645469(v=vs.85).aspx">DLGPROC</a> message processing, like the INT_PTR return type, and returning TRUE instead of zero.</p>
+
+<h3><a id="section3.4"></a>3.4. Using controls</h3>
+
+<p>Still on the previous example, let’s say the dialog resource has an edit box, with <code>IDC_EDIT1</code> as the resource ID. WinLamb has the <code>textbox</code> class, which wraps an <a href="https://docs.microsoft.com/en-us/windows/desktop/Controls/edit-controls">edit box</a>. To use it, declare the <code>textbox</code> object as a member of the parent class:</p>
+
+<pre lang="C++">// Declaration: FirstDialog.h
+
+#include "winlamb/dialog_main.h"
+#include "winlamb/textbox.h"
+
+class FirstDialog : public wl::dialog_main {
+private:
+  wl::textbox edit1; // our control object
+public:
+  FirstDialog();
+};</pre>
+
+<p>On the control object, call <code>assign</code> method, which will call <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getdlgitem">GetDlgItem</a> and store the HWND inside the object. After that, the widget is ready to be used:</p>
+
+<pre lang="C++">// Implementation: FirstDialog.cpp
+
+#include "FirstDialog.h"
+#include "resource.h" // contains the dialog resource IDs
+RUN(FirstDialog);
+
+FirstDialog::FirstDialog()
+{
+  setup.dialogId = IDD_MY_FIRST_DIALOG;
+
+  on_message(WM_INITDIALOG, [this](wl::params p)-&gt;INT_PTR
+  {
+    edit1.assign(this, IDC_EDIT1)
+      .set_text(L"This is the edit box.")
+      .set_focus();
+    return TRUE;
+  });
+}</pre>
+
+<p>Note that <code>assign</code> and <code>set_text</code> methods both return a reference to the object itself, so other method calls can be <a href="https://en.wikipedia.org/wiki/Method_chaining">chained</a>. This is a common behavior to most objects in WinLamb.</p>
+
+<h3><a id="section3.5"></a>3.5. A modal popup dialog</h3>
+
+<p>A modal popup dialog is a window created via <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-dialogboxparamw">DialogBoxParam</a>. Let’s implement a modal dialog with its header and source files. Then, we will instantiate this modal in a parent window.</p>
+
+<p>This is the header of our modal dialog, which inherits from <code>dialog_modal</code> class:</p>
+
+<pre lang="C++">// Declaration: MyModal.h
+
+#include "winlamb/dialog_modal.h"
+
+class MyModal : public wl::dialog_modal {
+public:
+  MyModal();
+};</pre>
+
+<p>The implementation is pretty much like any other dialog window – you must inform the ID of the dialog resource to be loaded –, but remember modal dialogs are destroyed by calling <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-enddialog">EndDialog</a>, with the second parameter of this function being the return value of the original dialog call.</p>
+
+<pre lang="C++">// Implementation: MyModal.cpp
+
+#include "MyModal.h"
+#include "resource.h" // contains dialog resource ID
+
+MyModal::MyModal()
+{
+  setup.dialogId = IDD_DIALOG2;
+
+  on_message(WM_COMMAND, [this](wl::params p)-&gt;INT_PTR
+  {
+    if (LOWORD(p.wParam) == IDCANCEL) // the ESC key
+    {
+      EndDialog(hwnd(), 33); // modal will return 33, see the next example
+      return TRUE;
+    }
+    return FALSE;
+  });
+}</pre>
+
+<p>Now let’s revisit the implementation of our main window, which will now use the modal dialog by instantiating the object and calling the <code>show</code> method. Since the dialog is modal, the <code>show</code> method will block the execution and will return only <i>after</i> the dialog is closed.</p>
+
+<pre lang="C++">// Implementation: MainWindow.cpp
+
+#include "MainWindow.h"
+#include "MyModal.h" // our modal dialog header
+RUN(MainWindow);
+
+MainWindow::MainWindow()
+{
+  on_message(WM_COMMAND, [this](wl::params p)-&gt;LRESULT
+  {
+    if (LOWORD(p.wParam) == IDC_SHOWMODAL) // some button to open the modal
+    {
+      MyModal modalDlg;
+      int retVal = modalDlg.show(this); // blocks until return; retVal receives 33
+      return 0;
+    }
+    return DefWindowProc(hwnd(), p.message, p.wParam, p.lParam);
+  });
+}</pre>
+
+<p>If the modal asks user input, it’s common for the modal to return constants like IDOK or IDCANCEL.</p>
+
+<p>The modal dialog can also receive any parameters on the constructor, just like any class, and have public methods to return something:</p>
+
+<pre lang="C++">class MyModal : public wl::dialog_modal {
+public:
+  MyModal(std::wstring name, int number);
+  std::wstring getName();
+};</pre>
+
+<p>Then the instantiation by the parent window, with a more elaborated example:</p>
+
+<pre lang="C++">on_message(WM_COMMAND, [this](wl::params p)-&gt;LRESULT
+{
+  if (LOWORD(p.wParam) == IDC_BTNSHOWMODAL)
+  {
+    MyModal modalDlg(L"Hello modal", 800); // instantiate the modal
+    if (modalDlg.show(this) != IDCANCEL) {
+      std::wstring foo = modalDlg.getName();
+    }
+    return 0;
+  }
+  return DefWindowProc(hwnd(), p.message, p.wParam, p.lParam);
+});</pre>
+
+<p>Modal dialogs can pop other modal dialogs, as well.</p>
+
+<h3><a id="section3.6"></a>3.6. A modeless popup dialog</h3>
+
+<p>A modeless popup dialog differs from the modal, since modeless dialogs are created via <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-createdialogparamw">CreateDialogParam</a>. This is an example of a declaration:</p>
+
+<pre lang="C++">// Declaration: MyModeless.h
+
+#include "winlamb/dialog_modeless.h"
+
+class MyModeless : public wl::dialog_modeless {
+public:
+  MyModeless();
+};</pre>
+
+<p>And the implementation, pretty much like the previous examples:</p>
+
+<pre lang="C++">// Implementation: MyModeless.cpp
+
+#include "MyModeless.h"
+#include "resource.h"
+
+MyModeless::MyModeless()
+{
+  setup.dialogId = IDD_DIALOG3;
+
+  on_message(WM_INITDIALOG, [](wl::params p)-&gt;INT_PTR
+  {
+    return TRUE;
+  });
+}</pre>
+
+<p>Very important: once a modeless dialog is created, it will live alongside its parent window – modeless dialogs have no message loop for themselves. For this reason, attention must be paid to the declaration scope. The modeless object must be declared as a <i>member</i> of its parent:</p>
+
+<pre lang="C++">// Declaration: MainWindow.h
+
+#include "winlamb/window_main.h"
+#include "MyModeless.h" // our modeless dialog header
+
+class MainWindow : public wl::window_main {
+private:
+  MyModeless mless; // modeless as a member
+public:
+  MainWindow();
+};</pre>
+
+<p>This way, after we created it, the variable won’t go out of scope <i>after</i> the caller function returns:</p>
+
+<pre lang="C++">// Implementation: MainWindow.cpp
+
+#include "MainWindow.h"
+RUN(MainWindow);
+
+MainWindow::MainWindow()
+{
+  on_message(WM_CREATE, [this](wl::params p)-&gt;LRESULT
+  {
+    mless.show(this); // modeless dialog is now alive
+    return 0;
+  });
+}</pre>
+
+<p>If we had declared <code>mless</code> object inside <code>on_message</code>’s lambda – just like we did on the previous example with the modal dialog –, <code>mless</code> would go out of scope right after the lambda returns, thus being destroyed while the modeless window is <i>still</i> alive. Then, as the modeless would come to process its first message, <code>mless</code> object would no longer exist.</p>
+
+<p>Scope is <i>very</i> important with lambdas.</p>
+
+<p>A modeless dialog is destroyed with a <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-destroywindow">DestroyWindow</a> call. By default, WinLamb handles WM_CLOSE with a call to DestroyWindow, so if you send WM_CLOSE to your modeless, it will be destroyed right away.</p>
+
+<p>Now if you have used modeless windows with pure Win32, you may be wondering about <a href="http://www.winprog.org/tutorial/modeless_dialogs.html">the problems</a> they introduce in the window message dispatching. Worry not: WinLamb was designed to treat these problems internally – this pain is gone.</p>
+
+<h3><a id="section3.7"></a>3.7. A custom control</h3>
+
+<p>A custom control is a window designed to be a child of another window. It will inherit from <code>window_control</code>:</p>
+
+<pre lang="C++">// Declaration: MyWidget.h
+
+#include "winlamb/window_control.h"
+
+class MyWidget : public wl::window_control {
+public:
+  MyWidget();
+};</pre>
+
+<p>The implementation can look like this:</p>
+
+<pre lang="C++">// Implementation: MyWidget.cpp
+
+#include "MyWidget.h"
+
+MyWidget::MyWidget()
+{
+  setup.wndClassEx.lpszClassName = L"HAPPY_LITTLE_WIDGET";
+  setup.wndClassEx.hbrBackground = reinterpret_cast&lt;HBRUSH&gt;(COLOR_BTNFACE + 1);
+  setup.exStyle |= wl::wsx::CLIENTEDGE;
+  setup.style |= (wl::ws::TABSTOP | wl::ws::GROUP | wl::ws::HSCROLL);
+
+  on_message(WM_PAINT, [this](wl::params p)-&gt;LRESULT
+  {
+    PAINTSTRUCT ps{};
+    HDC hdc = BeginPaint(hwnd(), &amp;ps);
+    EndPaint(hwnd(), &amp;ps);
+    return 0;
+  });
+
+  on_message(WM_ERASEBKGND, [](wl::params p)-&gt;LRESULT
+  {
+    return 0;
+  });
+}</pre>
+
+<p>For the very same reasons of the aforementioned <a href="#section3.6">modeless dialog</a> example, you must declare the child window as a <i>member</i> of the parent:</p>
+
+<pre lang="C++">// Declaration: ParentWindow.h
+
+#include "winlamb/window_main.h"
+#include "MyWidget.h" // our custom control header
+
+class ParentWindow : public wl::window_main {
+private:
+  MyWidget widgetFoo1, widgetFoo2; // let’s have two of them
+public:
+  ParentWindow();
+};</pre>
+
+<p>To create the control, the parent must call its <code>create</code> member function, which receives: the <code>this</code> pointer of the parent, the control ID we want to give it, a SIZE for the control size, and a POINT for the position within the parent:</p>
+
+<pre lang="C++">// Implementation: ParentWindow.cpp
+
+#include "ParentWindow.h"
+RUN(ParentWindow);
+
+#define WIDG_FIRST  40001
+#define WIDG_SECOND WIDG_FIRST + 1
+
+ParentWindow::ParentWindow()
+{
+  setup.wndClassEx.lpszClassName = L"BEAUTIFUL_PARENT";
+
+  on_message(WM_CREATE, [this](wl::params p)-&gt;LRESULT
+  {
+    widgetFoo1.create(this, WIDG_FIRST,  {10,10},  {150,100});
+    widgetFoo2.create(this, WIDG_SECOND, {10,200}, {150,320});
+    return 0;
+  });
+}</pre>
+
+<p>These are the predefined values of <code>style</code> for the <code>window_control</code>:</p>
+
+<pre lang="C++">setup.wndClassEx.style = wl::wc::DBLCLKS;
+setup.style = wl::ws::CHILD | wl::ws::VISIBLE | wl::ws::CLIPCHILDREN | wl::ws::CLIPSIBLINGS;</pre>
+
+<h3><a id="section3.8"></a>3.8. Dialog as a control</h3>
+
+<p>It is also possible to embed a dialog as a child of a window, or as a child of another dialog. To build such a child dialog, inherit it from <code>dialog_control</code> class:</p>
+
+<pre lang="C++">// Declaration: MyDlgWidget.h
+
+#include "winlamb/dialog_control.h"
+
+class MyDlgWidget : public wl::dialog_control {
+public:
+  MyDlgWidget();
+};</pre>
+
+<p>To work properly, a control dialog must have some specific styles – this is a requirement from Win32, not from WinLamb. With Visual Studio resource editor, these are the styles:</p>
+
+<ul>
+  <li>Border: none;</li>
+  <li>Control: true;</li>
+  <li>Style: child;</li>
+  <li>Visible: true (otherwise will start invisible);</li>
+  <li>Client Edge: true if you want a border (will add WS_EX_CLIENTEDGE).</li>
+</ul>
+
+<p>Given the previous examples, I believe the implementation of a control dialog is trivial at this point of the article.</p>
+
+<h2><a id="section4"></a>4. Cracking messages</h2>
+
+<p>Beyond providing the ability to use lambdas to handle messages, WinLamb also offers facilities to deal with the message contents.</p>
+
+<h3><a id="section4.1"></a>4.1. Command and notify handling</h3>
+
+<p>So far, we only used <code>on_message</code> to handle Windows messages on our windows and dialogs. Beyond that, there are two other specialized methods to deal with <a href="https://docs.microsoft.com/en-us/windows/desktop/menurc/wm-command">WM_COMMAND</a> and <a href="https://docs.microsoft.com/en-us/windows/desktop/controls/wm-notify">WM_NOTIFY</a> messages specifically:</p>
+
+<pre lang="C++">void on_command(WORD cmd, std::function&lt;INT_PTR(wl::params)&gt;&amp;&amp; func);
+
+void on_notify(UINT_PTR idFrom, UINT code, std::function&lt;INT_PTR(wl::params)&gt;&amp;&amp; func);</pre>
+
+<p>These are shorthands and have the same effect of manually switching within WM_COMMAND and WM_NOTIFY messages.</p>
+
+<pre lang="C++">on_command(IDOK, [this](wl::params p)-&gt;INT_PTR
+{
+  set_text(L"OK button clicked.");
+  return TRUE;
+});</pre>
+
+<p>WM_NOTIFY identifier receives two parameters – the ID of the control and the notification code – according to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/bb775514(v=vs.85).aspx">NMHDR</a> structure:</p>
+
+<pre lang="C++">on_notify(IDC_LISTVIEW1, LVN_DELETEITEM, [this](wl::params p)-&gt;INT_PTR
+{
+  set_text(L"Item deleted from list view.");
+  return TRUE;
+});</pre>
+
+<p>Both functions also accept an <a href="http://en.cppreference.com/w/cpp/utility/initializer_list">initializer_list</a> to handle multiple messages at once.</p>
+
+<h3><a id="section4.2"></a>4.2. Message parameters unpacked</h3>
+
+<p>When handling a message, your lambda always receive a single <code>wl::params</code> argument:</p>
+
+<pre lang="C++">on_message(WM_MENUSELECT, [](wl::params p)-&gt;LRESULT
+{
+  return 0;
+});</pre>
+
+<p>The <code>wl::params</code> is a simple <code>struct</code> with 3 members, which are familiar to anyone who ever wrote a Win32 program. This is the declaration which can be found inside WinLamb:</p>
+
+<pre lang="C++">struct params {
+  UINT   message;
+  WPARAM wParam;
+  LPARAM lParam;
+};</pre>
+
+<p>However, for almost all Windows messages, the WPARAM and LPARAM members contain packed data, varying accordingly to the message being handled. For example, for <a href="https://docs.microsoft.com/en-us/windows/desktop/menurc/wm-menuselect">WM_MENUSELECT</a>, this is what they carry:</p>
+
+<ul>
+  <li>WPARAM, low-order word – menu item index;</li>
+  <li>WPARAM, high-order word – item state flag;</li>
+  <li>LPARAM – handle to clicked menu.</li>
+</ul>
+
+<p>To retrieve these data, you must perform casts, extract bitflags, and be <i>sure</i> of what you’re doing.</p>
+
+<p>To alleviate this burden, WinLamb provides unpackers for (hopefully) all documented Windows messages. These unpackers are simply <code>struct</code>s derived from <code>wl::params</code>, adding the unpacking methods. They are enclosed within the <code>wl::wm</code> namespace.</p>
+
+<p>For example, let’s take WM_MENUSELECT. In the following example, the declaration of <code>wl::params</code> is replaced by <code>wl::wm::menuselect</code>, and that’s all you need to do. Notice the methods being called on <code>p</code>:</p>
+
+<pre lang="C++">on_message(WM_MENUSELECT, [](wl::wm::menuselect p)-&gt;LRESULT
+{
+  if (p.is_checked() || p.has_bitmap()) {
+    HMENU hMenu = p.hmenu();
+    WORD itemIndex = p.item();
+  }
+  return 0;
+});</pre>
+
+<p>This is functionally equivalent of <i>painfully</i> unpacking the data manually, like this:</p>
+
+<pre lang="C++">on_message(WM_MENUSELECT, [](wl::params p)-&gt;LRESULT
+{
+  if ((HIWORD(p.wParam) &amp; MF_CHECKED) || (HIWORD(p.wParam) &amp; MF_BITMAP)) {
+    HMENU hMenu = reinterpret_cast&lt;HMENU&gt;(p.lParam);
+    WORD itemIndex = LOWORD(p.wParam);
+  }
+  return 0;
+});</pre>
+
+<p>Use the message crackers as much as you can. They are safer and they save you time, plus they look nice under IntelliSense:</p>
+
+<p><img src="ar-source_arquivos/wm-intellisense.png" width="664" height="370"></p>
+
+<h3><a id="section4.3"></a>4.3. Unpacking common control notifications</h3>
+
+<p>Common controls send notifications through <a href="https://docs.microsoft.com/en-us/windows/desktop/controls/wm-notify">WM_NOTIFY</a> message, which has a different approach from ordinary messages. For common controls, the data comes packed into an <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/bb775514(v=vs.85).aspx">NMHDR</a> struct, or an struct that contains it.</p>
+
+<p>WinLamb also has crackers for these notifications, they are enclosed within the <code>wl::wmn</code> namespace. Notice the separation here:</p>
+
+<ul>
+  <li>Ordinary Windows messages belong to <code>wl::wm</code> namespace;</li>
+  <li>WM_NOTIFY notifications belong to <code>wl::wmn</code> namespace.</li>
+</ul>
+
+<p>Within <code>wl::wmn</code>, there is one nested namespace to each common control, so the notifications of each control are kept separated. These namespaces are named following the same convention of the notification itself. For example, <a href="https://docs.microsoft.com/en-us/windows/desktop/Controls/bumper-list-view-control-reference-notifications">list view notifications</a>, which are prefixed with <code>LVN_</code>, belong to the <code>wl::wmn::lvn</code> namespace.</p>
+
+<p><img src="ar-source_arquivos/lvn-namespace.png" width="642" height="226"></p>
+
+<p>For example, this is how we crack a <a href="https://docs.microsoft.com/en-us/windows/desktop/controls/lvn-insertitem">LVN_INSERTITEM</a> notification:</p>
+
+<pre lang="C++">on_notify(IDC_LIST1, LVN_INSERTITEM, [](wl::wmn::lvn::insertitem p)-&gt;INT_PTR
+{
+  int newId = p.nmhdr().iItem;
+  return TRUE;
+});</pre>
+
+<p>Notice that <code>p</code> has an <code>nmhdr</code> member function. This function will return the <i>exact</i> type according to the notification; in the above example, <code>nmhdr</code> will return a reference to an <a href="https://docs.microsoft.com/en-us/windows/desktop/api/commctrl/ns-commctrl-tagnmlistview">NMLISTVIEW</a> struct, which contains NMHDR. IntelliSense will list all the members:</p>
+
+<p><img src="ar-source_arquivos/nmlistview-intellisense.png" width="596" height="274"></p>
+
+<h2><a id="section5"></a>5. Subclassing controls</h2>
+
+<p><a href="https://docs.microsoft.com/en-us/windows/desktop/Controls/subclassing-overview">Control subclassing</a> is an operation normally done with the aid of <a href="https://docs.microsoft.com/en-us/windows/desktop/api/commctrl/nf-commctrl-setwindowsubclass">SetWindowSubclass</a> Win32 function. You provide a <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/bb776774(v=vs.85).aspx">SUBCLASSPROC</a> callback function, which is very similar to WNDPROC and DLGPROC, and handle specific messages from there.</p>
+
+<h3><a id="section5.1"></a>5.1. Installation and message handling</h3>
+
+<p>WinLamb’s approach to control subclassing is to instantiate an object of <code>subclass</code> type, then attach it to an existing control. For example, retaking the <a href="#section3.4">edit control example</a>, let’s subclass the edit control. First, we add a <code>subclass</code> member to our class:</p>
+
+<pre lang="C++">// Declaration: FirstDialog.h
+
+#include "winlamb/dialog_main.h"
+#include "winlamb/textbox.h"
+#include "winlamb/subclass.h"
+
+class FirstDialog : public wl::dialog_main {
+private:
+  wl::textbox edit1; // our control object
+  wl::subclass edit1sub; // edit subclasser object
+public:
+  FirstDialog();
+};</pre>
+
+<p>To handle the methods within the subclassing, we just call <code>on_message</code> on the subclass object. It works the same way of windows and dialogs, except we’re handling a message from SUBCLASSPROC callback procedure:</p>
+
+<pre lang="C++">edit1sub.on_message(WM_RBUTTONDOWN, [](wl::params p)-&gt;LRESULT
+{
+  // subclass code...
+  return 0;
+});</pre>
+
+<p>After adding the messages, we’ll have a <code>subclass</code> object stuffed with handlers, but it still does nothing. We install the subclass <i>after</i> we initialize the control by calling <code>assign</code>. This is the full implementation:</p>
+
+<pre lang="C++">// Implementation: FirstDialog.cpp
+
+#include "FirstDialog.h"
+#include "resource.h"
+RUN(FirstDialog);
+
+FirstDialog::FirstDialog()
+{
+  setup.dialogId = IDD_MY_FIRST_DIALOG;
+
+  edit1sub.on_message(WM_RBUTTONDOWN, [](wl::params p)-&gt;LRESULT
+  {
+    // subclass code for edit1...
+    return 0;
+  });
+
+  on_message(WM_INITDIALOG, [this](wl::params p)-&gt;INT_PTR
+  {
+    edit1.assign(this, IDC_EDIT1); // init control
+    edit1sub.install_subclass(edit1); // subclass installed and ready
+    return TRUE;
+  });
+}</pre>
+
+<p>Note that, in this example, we added the <code>edit1sub</code> handler <i>before</i> the WM_INITIDALOG, but this is <i>not</i> required. Since the lambdas are called asynchronously, the order we attach them doesn’t matter. We can attach the <code>edit1sub</code> messages after WM_INITDIALOG as well, in any order.</p>
+
+<p>The subclass object also has <code>on_command</code> and <code>on_notify</code> member functions, and it can be detached at any time by calling <code>remove_subclass</code>.</p>
+
+<h2><a id="section6"></a>6. Final topics</h2>
+
+<h3><a id="section6.1"></a>6.1. Window types summary</h3>
+
+<p>Summing up, these are all WinLamb window base classes your window can inherit from:</p>
+
+<ul>
+  <li><code>window_main</code> – creates the <a href="#section3.1">main window</a> of the program, encapsulating the <a href="https://docs.microsoft.com/en-us/windows/desktop/LearnWin32/window-messages">message loop</a>, window registering and window creation through <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-createwindowexw">CreateWindowEx</a>;</li>
+  <li><code>dialog_main</code> – creates the main window of the program using a <a href="#section3.3">dialog box</a>, through <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-createdialogparamw">CreateDialogParam</a>, and takes care of the message loop;</li>
+  <li><code>dialog_modal</code> – creates a <a href="#section3.5">modal dialog box</a> through <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-dialogboxparamw">DialogBoxParam</a>;</li>
+  <li><code>dialog_modeless</code> – creates a <a href="#section3.6">modeless dialog box</a> through CreateDialogParam;</li>
+  <li><code>window_control</code> – creates a <a href="#section3.7">custom child window</a> through CreateWindowEx, to be used as a control within a parent window;</li>
+  <li><code>dialog_control</code> – a dialog created with CreateDialogParam to be used <a href="#section3.8">as a control</a> within a parent window.</li>
+</ul>
+
+<p>WinLamb also have wrappers for many native controls, like <code>listview</code>, <code>textbox</code>, <code>combobox</code>, etc.</p>
+
+<p>Window <a href="#section5">subclassing</a> can also be automated.</p>
+
+<h3><a id="section6.2"></a>6.2. Default message processing</h3>
+
+<p>The window classes provide default processing for some messages. If you <a href="#section3.2">write a handler</a> to one of these messages, the default processing will be <i>overwritten</i>. Below is a list of the messages which have a default processing, and what they do:</p>
+
+<ul>
+  <li><code>window_main</code> – <a href="https://docs.microsoft.com/en-us/windows/desktop/winmsg/wm-ncdestroy">WM_NCDESTROY</a> (calls <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-postquitmessage">PostQuitMessage</a>);</li>
+  <li><code>dialog_main</code> – <a href="https://docs.microsoft.com/en-us/windows/desktop/winmsg/wm-close">WM_CLOSE</a> (calls <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-destroywindow">DestroyWindow</a>), WM_NCDESTROY (calls PostQuitMessage);</li>
+  <li><code>dialog_modal</code> – WM_CLOSE (calls <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-enddialog">EndDialog</a>);</li>
+  <li><code>dialog_modeless</code> – WM_CLOSE (calls DestroyWindow);</li>
+  <li><code>window_control</code> and <code>dialog_control</code> – <a href="https://docs.microsoft.com/en-us/windows/desktop/gdi/wm-ncpaint">WM_NCPAINT</a> (paints control borders, if any).</li></ul>
+
+<h3><a id="section6.3"></a>6.3. What’s next?</h3>
+
+<p>As far as I can remember, around 2002 I started wrapping all my Win32 routines in classes, to make them reusable to myself, to save my time. Through all these years it took the form of a real library, a thin abstraction layer over raw Win32. People who saw it often commented that it was good, so in 2017 I decided to publish it on <a href="https://github.com/rodrigocfd/winlamb">GitHub</a>.</p>
+
+<p>Yeah, although it’s a modern C++11 library, actually it was 15 years old when I first published it.</p>
+
+<p>Since WinLamb is what I use for my own personal programs, it’s likely to continue evolving with the time. Refactorings surely will occur, but the current architecture has been stable for many years, and it’s unlikely to have big breaking changes.</p>
+
+<p>I have a couple full real-world projects <a href="https://github.com/topics/winlamb">tagged on GitHub</a>. Everything is shared under the <a href="https://opensource.org/licenses/MIT">MIT license</a>.</p>
+
+<h2><a id="section7"></a>7. Article history</h2>
+
+<p>I’ll try to keep this article updated with the latest WinLamb version.</p>
+
+<ul>
+  <li>2018.12.31 – Style scoped enums, updating MSDN links.</li>
+  <li>2017.11.19 – Library refactoring, native control wrappers merged.</li>
+  <li>2017.04.26 – First public version.</li>
+</ul>
+
+
+</span>
+<!-- End Article -->
+
+
+
+
+</div>
+
+
+</body></html>
