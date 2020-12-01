@@ -1,104 +1,176 @@
-/**
+/*
  * Part of WinLamb - Win32 API Lambda Library
  * https://github.com/rodrigocfd/winlamb
- * Copyright 2017-present Rodrigo Cesar de Freitas Dias
- * This library is released under the MIT License
+ * This library is released under the MIT License.
  */
 
 #pragma once
-#include "internals/base_dialog.h"
-#include "internals/base_loop.h"
-#include "internals/base_msg_pubm.h"
-#include "internals/base_text_pubm.h"
-#include "internals/base_thread_pubm.h"
-#include "internals/run.h"
-#include "internals/styler.h"
-#include "wnd.h"
+#include <stdexcept>
+#include <string_view>
+#include <system_error>
+#include <Windows.h>
+#include <CommCtrl.h>
+#include <VersionHelpers.h>
+#include "internal/base_dialog.h"
+#include "internal/base_main_loop.h"
+#include "internal/gdi_obj.h"
+#include "internal/interfaces.h"
+#include "internal/str_aux.h"
 
 namespace wl {
-namespace _wli { class dialog_modeless; } // friend forward declaration
 
-// Inherit from this class to have a dialog as the main window for your application.
-class dialog_main :
-	public wnd,
-	public _wli::base_msg_pubm<INT_PTR>,
-	public _wli::base_thread_pubm<INT_PTR, TRUE>,
-	public _wli::base_text_pubm<dialog_main>
-{
-	friend _wli::dialog_modeless; // needs to access _baseLoop
-
-protected:
-	// Variables to be set by user, used only during window creation.
-	struct setup_vars final : public _wli::base_dialog::setup_vars {
-		int iconId = 0;
-		int accelTableId = 0;
+/// Dialog to be used as the application main window.
+/// Allows message and notification handling.
+///
+/// #include <dialog_main.h>
+///
+/// @note The following messages are default handled. If you add a handler to
+/// any of them, you'll overwrite the default behavior:
+/// - msg::wnd_events::wm_close()
+/// - msg::wnd_events::wm_nc_destroy()
+///
+/// @see @ref ex05
+class dialog_main : public i_parent_window {
+public:
+	/// Setup options for dialog_main.
+	/// @see @ref ex05
+	struct setup_opts final {
+		/// Resource dialog ID, must be set.
+		/// @see https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createdialogparamw
+		int dialog_id = 0;
+		/// Resource icon ID, optional.
+		/// @see https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-seticon
+		int icon_id = 0;
+		/// Resource accelerator table ID, optional.
+		/// @see https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-loadacceleratorsw
+		int accel_tbl_id = 0;
 	};
 
 private:
-	HWND                             _hWnd = nullptr;
-	_wli::base_msg<INT_PTR>          _baseMsg{_hWnd};
-	_wli::base_thread<INT_PTR, TRUE> _baseThread{_baseMsg};
-	_wli::base_dialog                _baseDialog{_hWnd, _baseMsg};
-	_wli::base_loop                  _baseLoop;
+	setup_opts _setup;
+	_wli::base_dialog _base;
+	_wli::base_main_loop _mainLoop;
 
 public:
-	// Defines window creation parameters.
-	setup_vars setup;
-
-	// Wraps window style changes done by Get/SetWindowLongPtr.
-	_wli::styler<dialog_main> style{this};
-
-protected:
-	dialog_main() :
-		wnd(_hWnd), base_msg_pubm(_baseMsg), base_thread_pubm(_baseThread), base_text_pubm(_hWnd)
+	/// Default constructor.
+	dialog_main()
 	{
-		this->base_msg_pubm::on_message(WM_CLOSE, [this](params) noexcept -> INT_PTR {
-			DestroyWindow(this->_hWnd);
-			return TRUE;
-		});
-		this->base_msg_pubm::on_message(WM_NCDESTROY, [](params) noexcept -> INT_PTR {
-			PostQuitMessage(0);
-			return TRUE;
-		});
+		this->_default_msg_handlers();
 	}
 
-public:
+	/// Move constructor.
 	dialog_main(dialog_main&&) = default;
-	dialog_main& operator=(dialog_main&&) = default; // movable only
 
-	// Runs the dialog as the main program window; intended to be called in WinMain.
-	int winmain_run(HINSTANCE hInst, int cmdShow) {
-		InitCommonControls();
+	/// Move assignment operator.
+	dialog_main& operator=(dialog_main&&) = default;
 
-		if (!this->_baseDialog.create_dialog_param(this->setup, nullptr)) {
-			throw std::system_error(GetLastError(), std::system_category(),
-				"CreateDialogParam failed for main dialog");
+	/// Creates the dialog window and runs the main application loop.
+	///
+	/// If you need any custom code to run before the window is created, you can
+	/// override this method.
+	///
+	/// @note Prefer using the RUN macro, which does the following:
+	/// - creates WinMain() entry point;
+	/// - instantiates your main dialog;
+	/// - calls run_as_main() automatically.
+	///
+	/// @see https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-winmain
+	/// @see https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createdialogparamw
+	virtual int run_as_main(HINSTANCE hInst, int cmdShow = SW_SHOW)
+	{
+		if (IsWindowsVistaOrGreater()) {
+			SetProcessDPIAware();
 		}
+		InitCommonControls();
+		_wli::globalUiFont.create_ui();
+
+		this->_base.create_dialog_param(hInst, nullptr, this->_setup.dialog_id);
 
 		HACCEL hAccel = nullptr;
-		if (this->setup.accelTableId) {
-			hAccel = LoadAcceleratorsW(hInst, MAKEINTRESOURCEW(this->setup.accelTableId));
-			if (!hAccel) {
+		if (this->_setup.accel_tbl_id != 0) {
+			// An accelerator table loaded from resource is automatically freed by the system.
+			hAccel = LoadAcceleratorsW(hInst, MAKEINTRESOURCEW(this->_setup.accel_tbl_id));
+			if (hAccel == nullptr) {
 				throw std::system_error(GetLastError(), std::system_category(),
-					"LoadAccelerators failed for main dialog");
+					"LoadAccelerators() failed  in " __FUNCTION__ "().");
 			}
 		}
 
-		this->_set_icon(hInst);
-		ShowWindow(this->_hWnd, cmdShow);
-		return this->_baseLoop.run_loop(this->_hWnd, hAccel); // can be used as program return value
+		this->_set_icon_if_any(hInst);
+		ShowWindow(this->hwnd(), cmdShow);
+		return this->_mainLoop.run_loop(this->hwnd(), hAccel);
 	}
 
+protected:
+	/// Exposes variables that will be used during dialog creation.
+	/// @warning If you call this method after the dialog is created, an exception will be thrown.
+	[[nodiscard]] setup_opts& setup()
+	{
+		if (this->hwnd() != nullptr) {
+			throw std::logic_error("Cannot call setup() after dialog_main is created.");
+		}
+		return this->_setup;
+	}
+
+	/// Exposes the handler methods.
+	/// @warning If you call this method after the window is created, an exception will be thrown.
+	[[nodiscard]] msg::wnd_events_all& on() { return this->_base.on(); }
+
+	/// Creates one or more child controls, which must exist in the dialog resource.
+	/// This method should be called during WM_INITDIALOG.
+	/// @param children Each child control to be created.
+	void create_children(
+		std::initializer_list<std::reference_wrapper<i_resource_control>> children)
+	{
+		this->_base.create_children(children);
+	}
+
+	/// Executes a function asynchronously, in a new detached background thread.
+	/// @tparam F `std::function<void(ui_work)>`
+	/// @param func `[](ui_work ui) {}`
+	/// @see @ref ex09
+	template<typename F>
+	void background_work(F&& func) { this->_base.background_work(std::move(func)); }
+
+	/// Sets the window title.
+	/// @see https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowtextw
+	const dialog_main& set_title(std::wstring_view t) const noexcept { SetWindowTextW(this->hwnd(), t.data()); return *this; }
+
+	/// Retrieves the window title.
+	/// @see https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowtextw
+	[[nodiscard]] std::wstring title() const { return _wli::str_aux::get_window_text(this->hwnd()); }
+
+public:
+	/// Returns the underlying HWND handle.
+	[[nodiscard]] HWND hwnd() const noexcept override { return this->_base.hwnd(); }
+
 private:
-	void _set_icon(HINSTANCE hInst) const noexcept {
-		if (this->setup.iconId) {
-			SendMessageW(this->_hWnd, WM_SETICON, ICON_SMALL,
+	void _default_msg_handlers()
+	{
+		this->on().wm_close([this]() noexcept
+		{
+			DestroyWindow(this->hwnd());
+		});
+
+		this->on().wm_nc_destroy([]() noexcept
+		{
+			PostQuitMessage(0);
+		});
+	}
+
+	void _set_icon_if_any(HINSTANCE hInst) const noexcept
+	{
+		// If an icon ID was specified, load it from the resources.
+		// Resource icons are automatically released by the system.
+		if (this->_setup.icon_id != 0) {
+			SendMessageW(this->hwnd(), WM_SETICON, ICON_SMALL,
 				reinterpret_cast<LPARAM>(reinterpret_cast<HICON>(LoadImageW(hInst,
-					MAKEINTRESOURCEW(this->setup.iconId),
+					MAKEINTRESOURCEW(this->_setup.icon_id),
 					IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR))));
-			SendMessageW(this->_hWnd, WM_SETICON, ICON_BIG,
+
+			SendMessageW(this->hwnd(), WM_SETICON, ICON_BIG,
 				reinterpret_cast<LPARAM>(reinterpret_cast<HICON>(LoadImageW(hInst,
-					MAKEINTRESOURCEW(this->setup.iconId),
+					MAKEINTRESOURCEW(this->_setup.icon_id),
 					IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR))));
 		}
 	}

@@ -1,0 +1,179 @@
+:root {
+	--vFont:  'Segoe UI',sans-serif;
+	--vFontH: 12pt;
+	--mFont:  Consolas,monospace;
+	--mFontH: 11pt;
+}
+
+body {
+	color: #24292e;
+}
+
+h1 {
+	font-size: 20pt;
+	font-weight: 600;
+	border-bottom: 1px solid #d8dcee; /* same color of TOC border */
+	padding-bottom: 2px;
+}
+h2 {
+	font-size: 16pt;
+	font-weight: 600;
+}
+
+div, dl, p, table {
+	font: var(--vFontH) var(--vFont);
+}
+
+li > ul {
+	margin: 10px 0;
+}
+
+div.toc { /* TOC shown in markdown */
+	border-radius: unset;
+}
+div.toc ul {
+	margin: 0;
+}
+
+/* --- Top left project info ------------------------------------------------ */
+
+#projectname {
+	font: bold 26pt var(--vFont);
+}
+#projectbrief {
+	font: 14pt var(--vFont);
+	padding-bottom: 5px;
+}
+#projectnumber {
+	font: 14pt var(--vFont);
+}
+
+/* --- Top right search box ------------------------------------------------- */
+
+#MSearchBox .left,
+#MSearchBox .right,
+#MSearchField {
+	background-image: none;
+}
+#MSearchBox { /* surrounding div */
+	width: 240px;
+	border: 1px solid #bbb;
+	padding-top: 3px;
+	padding-bottom: 1px;
+	margin-right: 20px;
+}
+#MSearchSelect { /* magnifier icon */
+	margin-top: 2px;
+}
+#MSearchField { /* the inputbox itself */
+	font: var(--vFontH) var(--vFont);
+	width: 190px;
+	margin-left: 24px;
+}
+#MSearchCloseImg { /* x that appears at right when a search is made */
+	margin-top: 4px;
+}
+
+/* --- Left navigation tree ------------------------------------------------- */
+
+#nav-tree .label {
+	font: 10pt var(--vFont);
+}
+.arrow {
+	font: 10pt Arial,sans-serif;
+}
+
+/* --- Methods summary ------------------------------------------------------ */
+
+.title { /* of the entity being shown */
+	font: bold 22pt var(--vFont);
+}
+
+.el, /* links */
+.memItemLeft, /* public attributes cell */
+.memItemRight,
+.memTemplItemLeft,
+.memTemplItemRight,
+.memname { /* function signature in detailed documentation */
+	font: var(--mFontH) var(--mFont);
+}
+.el {
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+/* --- Detailed documentation ----------------------------------------------- */
+
+.directory .levels { /* namespace and class list */
+	font-size: 11pt;
+}
+.directory td.entry {
+	padding-top: 7px;
+}
+.directory td.desc {
+	font: var(--vFontH) var(--vFont);
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+.memtitle,
+.memproto,
+.memdoc {
+	border-radius: 0;
+	box-shadow: none;
+	background-image: none;
+}
+.memtitle { /* card title */
+	font-weight: bold;
+	font-size: 14pt;
+}
+code,
+.paramname {
+	font: var(--mFontH) var(--mFont);
+}
+.paramname {
+	padding-top: 5px;
+	padding-right: 8px;
+}
+.tparams code,
+.params code {
+	background-color: #f9fafc;
+	border: 1px solid #dde4f1;
+	padding: 2px 4px;
+}
+
+/* --- Mini tags ------------------------------------------------------------ */
+
+span.mlabels { /* surrounds the tags in detailed documentation */
+	display: inline-block;
+	margin-bottom: 4px;
+}
+span.mlabel {
+	font-size: 8pt;
+	font-weight: bold;
+	border-radius: 0;
+	border: none;
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+/* --- Source code block ---------------------------------------------------- */
+
+div.fragment {
+	padding: 10px;
+}
+.fragment .line {
+	font: var(--mFontH) var(--mFont);
+}
+.comment {
+	font-style: italic;
+}
+
+/* --- Page footer ---------------------------------------------------------- */
+
+.navelem {
+	font: var(--vFontH) var(--vFont);
+}
+.navpath li {
+	padding-top: 6px;
+}

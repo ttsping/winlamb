@@ -1,102 +1,52 @@
-/**
+/*
  * Part of WinLamb - Win32 API Lambda Library
  * https://github.com/rodrigocfd/winlamb
- * Copyright 2017-present Rodrigo Cesar de Freitas Dias
- * This library is released under the MIT License
+ * This library is released under the MIT License.
  */
 
 #pragma once
+
 #include <algorithm>
 #include <vector>
+#include "internal/lambda_type.h"
 
-namespace wl {
+/// Vector utilities.
+///
+/// #include <vec.h>
+namespace wl::vec {
 
-// Utilities to std::vector.
-namespace vec {
-
-// Wrapper to std::for_each. Iterates over all elements, executing the lambda for each one.
-template<typename T, typename predicateT>
-inline void for_each(const std::vector<T>& v, predicateT&& func) {
-	// vector<wstring> ss = {L"a", L"b", L"c"};
-	// vec::for_each(ss, [](const wstring& c) -> void {
-	//   size_t sz = c.length();
-	// });
-	std::for_each(v.cbegin(), v.cend(), std::forward<predicateT>(func));
-}
-
-// Wrapper to std::for_each. Iterates over all elements, executing the lambda for each one.
-template<typename T, typename predicateT>
-inline void for_each(std::vector<T>& v, predicateT&& func) {
-	// vector<wstring> ss = {L"a", L"b", L"c"};
-	// vec::for_each(ss, [](wstring& c) -> void {
-	//   c.append(L"x");
-	// });
-	std::for_each(v.begin(), v.end(), std::forward<predicateT>(func));
-}
-
-// Wrapper to std::find. Returns index of first element which is equal to value, otherwise -1.
+/// Appends a vector to another.
+/// @see https://en.cppreference.com/w/cpp/container/vector/insert
 template<typename T>
-inline size_t find(const std::vector<T>& v, const T& value) {
-	typename std::vector<T>::const_iterator it = std::find(v.cbegin(), v.cend(), value);
-	return it == v.cend() ? -1 : it - v.cbegin();
+void append(std::vector<T>& dest, const std::vector<T>& other)
+{
+	dest.insert(dest.end(), other.begin(), other.end());
 }
 
-// Wrapper to std::find_if. Returns index of first element which is equal to value, otherwise -1.
-template<typename T, typename predicateT>
-inline size_t find_if(const std::vector<T>& v, predicateT&& func) {
-	// Usage example:
-	// vector<wstring> ss = {L"a", L"b", L"c"};
-	// vec::find_if(ss, [](const wstring& c) -> bool {
-	//   return c == L"a";
-	// });
-	typename std::vector<T>::const_iterator it = std::find_if(v.cbegin(), v.cend(),
-		std::forward<predicateT>(func));
-	return it == v.cend() ? -1 : it - v.cbegin();
-}
-
-// Wrapper to std::find. Returns true if element exists.
+/// Appends items to a vector.
+/// @see https://en.cppreference.com/w/cpp/container/vector/insert
 template<typename T>
-inline bool exists(const std::vector<T>& v, const T& value) {
-	return find(v, value) != -1;
+void append(std::vector<T>& dest, std::initializer_list<T> values)
+{
+	dest.insert(dest.end(), values.begin(), values.end());
 }
 
-// Wrapper to std::find_if. Returns true if predicate matches an element.
-template<typename T, typename predicateT>
-inline bool exists_if(const std::vector<T>& v, predicateT&& func) {
-	// Usage example:
-	// vector<wstring> ss = {L"a", L"b", L"c"};
-	// vec::exists_if(ss, [](const wstring& c) -> bool {
-	//   return c == L"a";
-	// });
-	return find_if(v, std::forward<predicateT>(func)) != -1;
-}
-
-// Appends a vector onto another.
-template<typename T>
-inline void append(std::vector<T>& v, const std::vector<T>& other) {
-	v.insert(v.end(), other.cbegin(), other.cend());
-}
-
-// Removes an element by index.
-template<typename T>
-inline void remove(std::vector<T>& v, size_t index) {
-	v.erase(v.begin() + index);
-}
-
-// Wrapper to std::remove_if. Removes all elements which match the predicate.
-template<typename T, typename predicateT>
-inline void remove_if(std::vector<T>& v, predicateT&& func) {
-	// https://stackoverflow.com/a/9053941/6923555
-	// Usage example:
-	// vector<wstring> ss = {L"a", L"b", L"c"};
-	// vec::remove_if(ss, [](const wstring& c) -> bool {
-	//   return c == L"a";
-	// });
+/// Deletes from vector all elements where lambda returns true, by implementing
+/// the erase-remove idiom.
+/// @tparam T Type of vector elements.
+/// @tparam F `std::function<bool(const T&)>`
+/// @param v Vector to be processed.
+/// @param func: `[](const T& elem) -> bool {}`
+/// @see https://en.wikipedia.org/wiki/Erase%E2%80%93remove_idiom
+/// @see https://en.cppreference.com/w/cpp/container/vector/erase
+/// @see https://en.cppreference.com/w/cpp/algorithm/remove
+template<typename T, typename F>
+auto delete_if(std::vector<T>& v, F&& func)
+	-> WINLAMB_LAMBDA_TYPE(func, bool(const T&), void)
+{
 	v.erase(
-		std::remove_if(v.begin(), v.end(), std::forward<predicateT>(func)),
-		v.end()
-	);
+		std::remove_if(v.begin(), v.end(), std::forward<F>(func)),
+		v.end());
 }
 
-}//namespace vec
-}//namespace wl
+}//namespace wl::vec

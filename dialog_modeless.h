@@ -1,83 +1,132 @@
-/**
+/*
  * Part of WinLamb - Win32 API Lambda Library
  * https://github.com/rodrigocfd/winlamb
- * Copyright 2017-present Rodrigo Cesar de Freitas Dias
- * This library is released under the MIT License
+ * This library is released under the MIT License.
  */
 
 #pragma once
-#include "internals/base_dialog.h"
-#include "internals/base_loop.h"
-#include "internals/base_msg_pubm.h"
-#include "internals/base_text_pubm.h"
-#include "internals/base_thread_pubm.h"
-#include "internals/styler.h"
-#include "wnd.h"
+#include <string_view>
+#include <Windows.h>
+#include "internal/base_dialog.h"
+#include "internal/base_main_loop.h"
+#include "internal/interfaces.h"
+#include "internal/str_aux.h"
 
 namespace wl {
 
-// Inherit from this class to have a dialog modeless popup.
-class dialog_modeless :
-	public wnd,
-	public _wli::base_msg_pubm<INT_PTR>,
-	public _wli::base_thread_pubm<INT_PTR, TRUE>,
-	public _wli::base_text_pubm<dialog_modeless>
-{
+/// Modeless popup dialog.
+/// Allows message and notification handling.
+///
+/// #include <dialog_modeless.h>
+///
+/// @note The following messages are default handled. If you add a handler to
+/// any of them, you'll overwrite the default behavior:
+/// - msg::wnd_events::wm_close()
+/// - msg::wnd_events::wm_nc_destroy()
+class dialog_modeless : public i_parent_window {
+public:
+	/// Setup options for dialog_modeless.
+	struct setup_opts final {
+		/// Resource dialog ID, must be set.
+		/// @see https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-dialogboxparamw
+		int dialog_id = 0;
+	};
+
 private:
-	HWND                             _hWnd = nullptr;
-	_wli::base_msg<INT_PTR>          _baseMsg{_hWnd};
-	_wli::base_thread<INT_PTR, TRUE> _baseThread{_baseMsg};
-	_wli::base_dialog                _baseDialog{_hWnd, _baseMsg};
-	_wli::base_loop*                 _pParentBaseLoop = nullptr;
+	setup_opts _setup;
+	_wli::base_dialog _base;
 
 public:
-	// Defines window creation parameters.
-	_wli::base_dialog::setup_vars setup;
-
-	// Wraps window style changes done by Get/SetWindowLongPtr.
-	_wli::styler<dialog_modeless> style{this};
-
-protected:
-	dialog_modeless() :
-		wnd(_hWnd), base_msg_pubm(_baseMsg), base_thread_pubm(_baseThread), base_text_pubm(_hWnd)
+	/// Default constructor.
+	dialog_modeless()
 	{
-		this->base_msg_pubm::on_message(WM_CLOSE, [this](params) noexcept -> INT_PTR {
-			DestroyWindow(this->_hWnd);
-			return TRUE;
-		});
-		this->base_msg_pubm::on_message(WM_NCDESTROY, [this](params) -> INT_PTR {
-			if (this->_pParentBaseLoop) {
-				this->_pParentBaseLoop->remove_modeless(this->_hWnd);
-			}
-			return TRUE;
-		});
+		this->_default_msg_handlers();
 	}
 
-public:
+	/// Move constructor.
 	dialog_modeless(dialog_modeless&&) = default;
-	dialog_modeless& operator=(dialog_modeless&&) = default; // movable only
 
-	// Creates the modeless dialog, returning immediately.
-	template<typename parentT>
-	void create(parentT* parent) {
-		if (!this->_baseDialog.create_dialog_param(this->setup, parent->hwnd())) {
-			throw std::system_error(GetLastError(), std::system_category(),
-				"CreateDialogParam failed for modeless dialog");
+	/// Move assignment operator.
+	dialog_modeless& operator=(dialog_modeless&&) = default;
+
+	/// Creates the modeless dialog and returns immediately.
+	///
+	/// Should be called during parent's WM_CREATE processing (or if dialog, WM_INITDIALOG).
+	///
+	/// @see https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createdialogparamw
+	/// @see https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-create
+	/// @see https://docs.microsoft.com/en-us/windows/win32/dlgbox/wm-initdialog
+	virtual void create(const i_window* parent)
+	{
+		if (parent == nullptr) {
+			throw std::invalid_argument("No parent passed in " __FUNCTION__ "().");
 		}
 
-		this->_pParentBaseLoop = parent->_baseLoop; // parent must have us as friend
-		this->_pParentBaseLoop->add_modeless(this->_hWnd);
-		ShowWindow(this->_hWnd, SW_SHOW);
+		HINSTANCE hInst = reinterpret_cast<HINSTANCE>(
+			GetWindowLongPtrW(parent->hwnd(), GWLP_HINSTANCE));
+		HWND h = this->_base.create_dialog_param(hInst, nullptr, this->_setup.dialog_id);
+
+		SendMessageW(parent->hwnd(), _wli::WM_MODELESS_CREATED, // tell parent we're here
+			0xc0de'f00d, reinterpret_cast<LPARAM>(h) );
 	}
 
-	// Creates the modeless dialog, returning immediately.
-	template<typename parentT>
-	void create(parentT* parent, POINT clientPos) {
-		this->create(parent);
-		POINT parentPos = clientPos;
-		ClientToScreen(parent->hwnd(), &parentPos); // now relative to parent
-		SetWindowPos(this->_hWnd, nullptr,
-			parentPos.x, parentPos.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+protected:
+	/// Exposes variables that will be used during dialog creation.
+	/// @warning If you call this method after the dialog is created, an exception will be thrown.
+	setup_opts& setup()
+	{
+		if (this->hwnd() != nullptr) {
+			throw std::logic_error("Cannot call setup() after dialog_modeless is created.");
+		}
+		return this->_setup;
+	}
+
+	/// Exposes the handler methods.
+	/// @warning If you call this method after the window is created, an exception will be thrown.
+	[[nodiscard]] msg::wnd_events_all& on() { return this->_base.on(); }
+
+	/// Creates one or more child controls, which must exist in the dialog resource.
+	/// This method should be called during WM_INITDIALOG.
+	/// @param children Each child control to be created.
+	void create_children(
+		std::initializer_list<std::reference_wrapper<i_resource_control>> children)
+	{
+		this->_base.create_children(children);
+	}
+
+	/// Executes a function asynchronously, in a new detached background thread.
+	/// @tparam F `std::function<void(ui_work)>`
+	/// @param func `[](ui_work ui) {}`
+	/// @see @ref ex09
+	template<typename F>
+	void background_work(F&& func) { this->_base.background_work(std::move(func)); }
+
+	/// Sets the window title.
+	/// @see https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowtextw
+	const dialog_modeless& set_title(std::wstring_view t) const noexcept { SetWindowTextW(this->hwnd(), t.data()); return *this; }
+
+	/// Retrieves the window title.
+	/// @see https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowtextw
+	[[nodiscard]] std::wstring title() const { return _wli::str_aux::get_window_text(this->hwnd()); }
+
+public:
+	/// Returns the underlying HWND handle.
+	[[nodiscard]] HWND hwnd() const noexcept override { return this->_base.hwnd(); }
+
+private:
+	void _default_msg_handlers()
+	{
+		this->on().wm_close([this]() noexcept
+		{
+			DestroyWindow(this->hwnd());
+		});
+
+		this->on().wm_nc_destroy([this]() noexcept
+		{
+			SendMessageW(GetWindow(this->hwnd(), GW_OWNER), // tell parent we're gone
+				_wli::WM_MODELESS_DESTROYED,
+				0xc0de'f00d, reinterpret_cast<LPARAM>(this->hwnd()) );
+		});
 	}
 };
 
