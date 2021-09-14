@@ -6,22 +6,22 @@
 namespace core {
 
 class MainDialog final {
+private:
+	static HFONT hFontSys;
+	DialogHandler* handler = nullptr;
+	int dialogId = 0;
+	int iconId = 0;
+	int accelId = 0;
+
 public:
-	struct MainDialogSetup {
-		DialogHandler* handler = nullptr;
-		int dialogId = 0;
-		int iconId = 0;
-		int accelId = 0;
-	};
-
-	MainDialogSetup setup;
-
 	~MainDialog();
+	MainDialog(DialogHandler* handler, int dialogId, int iconId, int accelId)
+		: handler{handler}, dialogId{dialogId}, iconId{iconId}, accelId{accelId} { }
+
 	static HFONT UiFont() { return MainDialog::hFontSys; }
 	int run(HINSTANCE hInst, int cmdShow);
 
-private:
-	static HFONT hFontSys;
+private:	
 	void putWindowIcon(HWND hDlg);
 	int loop(HWND hDlg, HACCEL hAccel);
 	static INT_PTR DialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);

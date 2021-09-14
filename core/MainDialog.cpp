@@ -26,27 +26,27 @@ int MainDialog::run(HINSTANCE hInst, int cmdShow)
 		return GetLastError();
 	}
 
-	HWND hDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(this->setup.dialogId),
-		nullptr, DialogProc, (LPARAM)this->setup.handler);
+	HWND hDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(this->dialogId),
+		nullptr, DialogProc, (LPARAM)this->handler);
 	this->putWindowIcon(hDlg);
 	ShowWindow(hDlg, cmdShow);
 
-	HACCEL hAccel = this->setup.accelId
-		? LoadAcceleratorsW(hInst, MAKEINTRESOURCEW(this->setup.accelId))
+	HACCEL hAccel = this->accelId
+		? LoadAcceleratorsW(hInst, MAKEINTRESOURCEW(this->accelId))
 		: nullptr;
 	return this->loop(hDlg, hAccel);
 }
 
 void MainDialog::putWindowIcon(HWND hDlg)
 {
-	if (this->setup.iconId) {
+	if (this->iconId) {
 		HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hDlg, GWLP_HINSTANCE);
 		SendMessageW(hDlg, WM_SETICON, ICON_SMALL,
 			(LPARAM)(HICON)LoadImageW(hInst,
-				MAKEINTRESOURCEW(this->setup.iconId), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR));
+				MAKEINTRESOURCEW(this->iconId), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR));
 		SendMessageW(hDlg, WM_SETICON, ICON_BIG,
 			(LPARAM)(HICON)LoadImageW(hInst,
-				MAKEINTRESOURCEW(this->setup.iconId), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR));
+				MAKEINTRESOURCEW(this->iconId), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR));
 	}
 }
 

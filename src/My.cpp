@@ -4,11 +4,8 @@
 
 RUN(My)
 
-My::My()
+My::My() : wnd{this, DLG_MAIN, ICO_DUCREUX, 0}
 {
-	wnd.setup.handler = this;
-	wnd.setup.dialogId = DLG_MAIN;
-	wnd.setup.iconId = ICO_DUCREUX;
 }
 
 INT_PTR My::dialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
