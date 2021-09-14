@@ -6,27 +6,28 @@
 #pragma comment(lib, "Comctl32.lib")
 using namespace core;
 
-int MainDialog::run()
+int MainDialog::run(HINSTANCE hInst, int cmdShow)
 {
 	InitCommonControls();
-	this->hDlg = CreateDialogParamW(this->hInst,
-		MAKEINTRESOURCEW(this->dlgId), nullptr, this->dlgProc, 0);
-	this->setIcon();
-	ShowWindow(this->hDlg, this->cmdShow);
-	return this->loop();
+	HWND hDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(this->setup.dialogId),
+		nullptr, DialogProc, (LPARAM)this->setup.handler);
+	this->setIcon(hDlg);
+	ShowWindow(hDlg, cmdShow);
+	return this->loop(hDlg);
 }
 
-void MainDialog::setIcon()
+void MainDialog::setIcon(HWND hDlg)
 {
-	SendMessageW(this->hDlg, WM_SETICON, ICON_SMALL,
-		(LPARAM)(HICON)LoadImageW(this->hInst,
-			MAKEINTRESOURCEW(this->iconId), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR));
-	SendMessageW(this->hDlg, WM_SETICON, ICON_BIG,
-		(LPARAM)(HICON)LoadImageW(this->hInst,
-			MAKEINTRESOURCEW(this->iconId), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR));
+	HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hDlg, GWLP_HINSTANCE);
+	SendMessageW(hDlg, WM_SETICON, ICON_SMALL,
+		(LPARAM)(HICON)LoadImageW(hInst,
+			MAKEINTRESOURCEW(this->setup.iconId), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR));
+	SendMessageW(hDlg, WM_SETICON, ICON_BIG,
+		(LPARAM)(HICON)LoadImageW(hInst,
+			MAKEINTRESOURCEW(this->setup.iconId), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR));
 }
 
-int MainDialog::loop()
+int MainDialog::loop(HWND hDlg)
 {
 	MSG msg;
 	BOOL ret = FALSE;
@@ -38,7 +39,7 @@ int MainDialog::loop()
 			MessageBoxW(nullptr, buf, L"Error", MB_ICONERROR);
 		}
 
-		if (IsDialogMessageW(this->hDlg, &msg)) {
+		if (IsDialogMessageW(hDlg, &msg)) {
 			continue;
 		}
 		TranslateMessage(&msg);
@@ -46,4 +47,18 @@ int MainDialog::loop()
 	}
 
 	return (int)msg.wParam;
+}
+
+INT_PTR MainDialog::DialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+{
+	DialogHandler* pHandler;
+
+	if (msg == WM_INITDIALOG) {
+		pHandler = (DialogHandler*)lp;
+		SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)pHandler);
+	} else {
+		pHandler = (DialogHandler*)GetWindowLongPtrW(hDlg, DWLP_USER);
+	}
+
+	return pHandler ? pHandler->dialogProc(hDlg, msg, wp, lp) : FALSE;
 }

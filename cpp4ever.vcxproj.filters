@@ -14,11 +14,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="core\MainDialog.cpp">
       <Filter>Core Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\My.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -31,6 +31,12 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="core\MainDialog.h">
+      <Filter>Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\My.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\DialogHandler.h">
       <Filter>Core Files</Filter>
     </ClInclude>
   </ItemGroup>
