@@ -11,14 +11,19 @@ public:
 		DialogHandler* handler = nullptr;
 		int dialogId = 0;
 		int iconId = 0;
+		int accelId = 0;
 	};
 
 	MainDialogSetup setup;
+
+	~MainDialog();
+	static HFONT UiFont() { return MainDialog::hFontSys; }
 	int run(HINSTANCE hInst, int cmdShow);
 
 private:
-	void setIcon(HWND hDlg);
-	int loop(HWND hDlg);
+	static HFONT hFontSys;
+	void putWindowIcon(HWND hDlg);
+	int loop(HWND hDlg, HACCEL hAccel);
 	static INT_PTR DialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 };
 
