@@ -1,6 +1,7 @@
 
 #pragma once
 #include <Windows.h>
+#include "internals/Dialog.h"
 
 namespace core {
 
@@ -8,26 +9,22 @@ namespace core {
 class MainDialog final {
 public:
 	// Implement this interface to handle messages from a MainDialog object.
-	class Handler {
+	class Handler : core_internals::Dialog::Handler {
 	public:
-		virtual INT_PTR dialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) = 0;
 		virtual int run(HINSTANCE hInst, int cmdShow) = 0;
 	};
 
 private:
-	static HFONT hFontSys;
-	Handler* handler = nullptr;
-	int dialogId = 0;
-	int iconId = 0;
-	int accelId = 0;
+	Handler* handler;
+	int dialogId;
+	int iconId;
+	int accelId;
 
 public:
-	~MainDialog();
 	MainDialog(Handler* handler, int dialogId, int iconId, int accelId)
 		: handler{handler}, dialogId{dialogId}, iconId{iconId}, accelId{accelId} { }
 
 	int run(HINSTANCE hInst, int cmdShow);
-	static HFONT UiFont() { return MainDialog::hFontSys; }
 
 private:	
 	void putWindowIcon(HWND hDlg);

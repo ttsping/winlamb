@@ -2,33 +2,18 @@
 #include <string>
 #include "MainDialog.h"
 #include <CommCtrl.h>
-#include <VersionHelpers.h>
 #include "../core/str.h"
 #pragma comment(lib, "Comctl32.lib")
 using namespace core;
 using std::wstring;
 
-HFONT MainDialog::hFontSys = nullptr;
-
-MainDialog::~MainDialog()
-{
-	if (MainDialog::hFontSys) DeleteObject(MainDialog::hFontSys);
-}
-
 int MainDialog::run(HINSTANCE hInst, int cmdShow)
 {
-	InitCommonControls();
-
-	NONCLIENTMETRICS ncm = {0};
-	ncm.cbSize = sizeof(ncm);
-	if (!IsWindowsVistaOrGreater()) ncm.cbSize -= sizeof(int);
-	SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
-	if (!(MainDialog::hFontSys = CreateFontIndirectW(&ncm.lfMenuFont))) {
-		return GetLastError();
-	}
+	InitCommonControls();	
 
 	HWND hDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(this->dialogId),
-		nullptr, DialogProc, (LPARAM)this->handler);
+		nullptr, core_internals::Dialog::Proc, (LPARAM)this->handler); // pass handler obj to proc
+	if (!hDlg) return GetLastError();
 	this->putWindowIcon(hDlg);
 	ShowWindow(hDlg, cmdShow);
 
@@ -83,22 +68,4 @@ int MainDialog::loop(HWND hDlg, HACCEL hAccel)
 	}
 
 	return (int)msg.wParam;
-}
-
-INT_PTR MainDialog::DialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
-{
-	Handler* pHandler;
-
-	if (msg == WM_INITDIALOG) {
-		pHandler = (Handler*)lp;
-		SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)pHandler);
-		EnumChildWindows(hDlg, [](HWND hCtrl, LPARAM lp) -> BOOL {
-			SendMessageW(hCtrl, WM_SETFONT, (WPARAM)(HFONT)lp, MAKELPARAM(FALSE, 0));
-			return TRUE;
-		}, (LPARAM)MainDialog::hFontSys);
-	} else {
-		pHandler = (Handler*)GetWindowLongPtrW(hDlg, DWLP_USER);
-	}
-
-	return pHandler ? pHandler->dialogProc(hDlg, msg, wp, lp) : FALSE;
 }

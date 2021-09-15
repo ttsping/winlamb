@@ -12,4 +12,5 @@ public:
 
 protected:
 	void onInitDialog(HWND hDlg);
+	void onOk(HWND hDlg);
 };

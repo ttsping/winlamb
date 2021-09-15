@@ -151,21 +151,32 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="core\Font.cpp" />
+    <ClCompile Include="core\internals\Dialog.cpp" />
     <ClCompile Include="core\MainDialog.cpp" />
+    <ClCompile Include="core\ModalDialog.cpp" />
     <ClCompile Include="core\str.cpp" />
     <ClCompile Include="src\My.cpp" />
+    <ClCompile Include="src\Pop.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\win10.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="core\Font.h" />
+    <ClInclude Include="core\internals\Dialog.h" />
     <ClInclude Include="core\MainDialog.h" />
+    <ClInclude Include="core\ModalDialog.h" />
     <ClInclude Include="core\str.h" />
     <ClInclude Include="res\resource.h" />
     <ClInclude Include="src\My.h" />
+    <ClInclude Include="src\Pop.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\cpp4ever.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\joseph-ducreux.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

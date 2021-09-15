@@ -12,6 +12,9 @@
     <Filter Include="Core Files">
       <UniqueIdentifier>{671bad40-401c-4480-ac72-90e3d059421c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core Files\Internals">
+      <UniqueIdentifier>{0900f9e2-9508-4ff8-99ec-22e4f984a74a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\MainDialog.cpp">
@@ -22,6 +25,18 @@
     </ClCompile>
     <ClCompile Include="core\str.cpp">
       <Filter>Core Files</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ModalDialog.cpp">
+      <Filter>Core Files</Filter>
+    </ClCompile>
+    <ClCompile Include="core\internals\Dialog.cpp">
+      <Filter>Core Files\Internals</Filter>
+    </ClCompile>
+    <ClCompile Include="core\Font.cpp">
+      <Filter>Core Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Pop.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -42,10 +57,27 @@
     <ClInclude Include="core\str.h">
       <Filter>Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="core\ModalDialog.h">
+      <Filter>Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\internals\Dialog.h">
+      <Filter>Core Files\Internals</Filter>
+    </ClInclude>
+    <ClInclude Include="core\Font.h">
+      <Filter>Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pop.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\cpp4ever.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\joseph-ducreux.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
