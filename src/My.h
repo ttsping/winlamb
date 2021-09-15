@@ -1,7 +1,7 @@
 
 #include "../core/MainDialog.h"
 
-class My final : core::DialogHandler {
+class My final : core::MainDialog::Handler {
 private:
 	core::MainDialog wnd;
 

@@ -1,11 +1,12 @@
 
-#include <cwchar>
 #include <string>
 #include "MainDialog.h"
 #include <CommCtrl.h>
 #include <VersionHelpers.h>
+#include "../core/str.h"
 #pragma comment(lib, "Comctl32.lib")
 using namespace core;
+using std::wstring;
 
 HFONT MainDialog::hFontSys = nullptr;
 
@@ -58,10 +59,12 @@ int MainDialog::loop(HWND hDlg, HACCEL hAccel)
 	while ((ret = GetMessageW(&msg, nullptr, 0, 0)) != 0) {
 		if (ret == -1) {
 			DWORD err = GetLastError();
-			wchar_t buf[60];
-			std::swprintf(buf, ARRAYSIZE(buf), L"GetMessage error: %d.", err);
-			MessageBoxW(nullptr, buf, L"Error", MB_ICONERROR);
+			wstring errMsg = str::FormatError(err);
+
+			wstring fullMsg = str::Format(L"GetMessage failed: %s.", errMsg.c_str());
+			MessageBoxW(nullptr, fullMsg.c_str(), L"Loop error", MB_ICONERROR);
 			return err;
+
 		} else if (ret == 0) { // WM_QUIT was sent, exit gracefully
 			break;
 		}
@@ -84,17 +87,17 @@ int MainDialog::loop(HWND hDlg, HACCEL hAccel)
 
 INT_PTR MainDialog::DialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
-	DialogHandler* pHandler;
+	Handler* pHandler;
 
 	if (msg == WM_INITDIALOG) {
-		pHandler = (DialogHandler*)lp;
+		pHandler = (Handler*)lp;
 		SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)pHandler);
 		EnumChildWindows(hDlg, [](HWND hCtrl, LPARAM lp) -> BOOL {
 			SendMessageW(hCtrl, WM_SETFONT, (WPARAM)(HFONT)lp, MAKELPARAM(FALSE, 0));
 			return TRUE;
 		}, (LPARAM)MainDialog::hFontSys);
 	} else {
-		pHandler = (DialogHandler*)GetWindowLongPtrW(hDlg, DWLP_USER);
+		pHandler = (Handler*)GetWindowLongPtrW(hDlg, DWLP_USER);
 	}
 
 	return pHandler ? pHandler->dialogProc(hDlg, msg, wp, lp) : FALSE;

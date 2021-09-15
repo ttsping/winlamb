@@ -1,4 +1,5 @@
 
+#include "../core/str.h"
 #include "My.h"
 #include "../res/resource.h"
 
@@ -25,5 +26,5 @@ INT_PTR My::dialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void My::onInitDialog(HWND hDlg)
 {
-
+	
 }

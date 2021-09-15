@@ -20,6 +20,9 @@
     <ClCompile Include="src\My.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="core\str.cpp">
+      <Filter>Core Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\win10.exe.manifest">
@@ -36,7 +39,7 @@
     <ClInclude Include="src\My.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="core\DialogHandler.h">
+    <ClInclude Include="core\str.h">
       <Filter>Core Files</Filter>
     </ClInclude>
   </ItemGroup>

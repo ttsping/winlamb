@@ -1,25 +1,33 @@
 
 #pragma once
 #include <Windows.h>
-#include "DialogHandler.h"
 
 namespace core {
 
+// Creates and manages the main window of the application, created from a dialog resource.
 class MainDialog final {
+public:
+	// Implement this interface to handle messages from a MainDialog object.
+	class Handler {
+	public:
+		virtual INT_PTR dialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) = 0;
+		virtual int run(HINSTANCE hInst, int cmdShow) = 0;
+	};
+
 private:
 	static HFONT hFontSys;
-	DialogHandler* handler = nullptr;
+	Handler* handler = nullptr;
 	int dialogId = 0;
 	int iconId = 0;
 	int accelId = 0;
 
 public:
 	~MainDialog();
-	MainDialog(DialogHandler* handler, int dialogId, int iconId, int accelId)
+	MainDialog(Handler* handler, int dialogId, int iconId, int accelId)
 		: handler{handler}, dialogId{dialogId}, iconId{iconId}, accelId{accelId} { }
 
-	static HFONT UiFont() { return MainDialog::hFontSys; }
 	int run(HINSTANCE hInst, int cmdShow);
+	static HFONT UiFont() { return MainDialog::hFontSys; }
 
 private:	
 	void putWindowIcon(HWND hDlg);
