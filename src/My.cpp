@@ -6,7 +6,7 @@
 
 RUN(My)
 
-My::My() : wnd{this, DLG_MAIN, ICO_DUCREUX, 0}
+My::My() : MainDialog{DLG_MAIN, ICO_DUCREUX, 0}
 {
 }
 

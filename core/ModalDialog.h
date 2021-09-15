@@ -1,28 +1,20 @@
 
 #pragma once
 #include <Windows.h>
-#include "internals/Dialog.h"
+#include "Dialog.h"
 
 namespace core {
 
 // Creates and manages a modal window, created from a dialog resource.
-class ModalDialog final {
-public:
-	// Implement this interface to handle messages from a ModalDialog object.
-	class Handler : core_internals::Dialog::Handler {
-	public:
-		virtual INT_PTR show(HWND hParent) = 0;
-	};
-
+class ModalDialog : public core_internals::Dialog {
 private:
-	Handler* handler;
 	int dialogId;
 	
 public:
-	ModalDialog(Handler* handler, int dialogId)
-		: handler{handler}, dialogId{dialogId} { }
+	ModalDialog(int dialogId)
+		: dialogId{dialogId} { }
 
-	INT_PTR show(HWND hParent);
+	virtual INT_PTR show(HWND hParent);
 };
 
 }

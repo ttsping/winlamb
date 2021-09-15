@@ -152,8 +152,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="core\CustomControl.cpp" />
+    <ClCompile Include="core\Dialog.cpp" />
     <ClCompile Include="core\Font.cpp" />
-    <ClCompile Include="core\internals\Dialog.cpp" />
     <ClCompile Include="core\MainDialog.cpp" />
     <ClCompile Include="core\ModalDialog.cpp" />
     <ClCompile Include="core\str.cpp" />
@@ -165,8 +165,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\CustomControl.h" />
+    <ClInclude Include="core\Dialog.h" />
     <ClInclude Include="core\Font.h" />
-    <ClInclude Include="core\internals\Dialog.h" />
     <ClInclude Include="core\MainDialog.h" />
     <ClInclude Include="core\ModalDialog.h" />
     <ClInclude Include="core\str.h" />

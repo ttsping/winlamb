@@ -2,7 +2,7 @@
 #include "Pop.h"
 #include "../res/resource.h"
 
-Pop::Pop() : wnd{this, DLG_MAIN}
+Pop::Pop() : ModalDialog{DLG_MAIN}
 {
 }
 

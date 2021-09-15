@@ -1,22 +1,22 @@
 
-#include "../Font.h"
 #include "Dialog.h"
+#include "Font.h"
 using namespace core_internals;
 
 INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
-	Handler* pHandler;
+	Dialog* pObj;
 
 	if (msg == WM_INITDIALOG) {
-		pHandler = (Handler*)lp;
-		SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)pHandler);
+		pObj = (Dialog*)lp;
+		SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)pObj);
 		EnumChildWindows(hDlg, [](HWND hCtrl, LPARAM lp) -> BOOL {
 			SendMessageW(hCtrl, WM_SETFONT, (WPARAM)(HFONT)lp, MAKELPARAM(FALSE, 0));
 			return TRUE;
 		}, (LPARAM)core::Font::UiFont().handle());
 	} else {
-		pHandler = (Handler*)GetWindowLongPtrW(hDlg, DWLP_USER);
+		pObj = (Dialog*)GetWindowLongPtrW(hDlg, DWLP_USER);
 	}
 
-	return pHandler ? pHandler->dialogProc(hDlg, msg, wp, lp) : FALSE;
+	return pObj ? pObj->dialogProc(hDlg, msg, wp, lp) : FALSE;
 }

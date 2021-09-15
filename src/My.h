@@ -1,16 +1,14 @@
 
 #include "../core/MainDialog.h"
 
-class My final : core::MainDialog::Handler {
-private:
-	core::MainDialog wnd;
-
+class My final : public core::MainDialog {
 public:
 	My();
-	virtual INT_PTR dialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) override;
-	virtual int run(HINSTANCE hInst, int cmdShow) override { return this->wnd.run(hInst, cmdShow); }
-
+	
 protected:
+	virtual INT_PTR dialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) override;
+
+private:
 	void onInitDialog(HWND hDlg);
 	void onOk(HWND hDlg);
 };
