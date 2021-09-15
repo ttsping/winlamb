@@ -3,7 +3,7 @@
 #include "Dialog.h"
 using namespace core_internals;
 
-INT_PTR Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
 	Handler* pHandler;
 

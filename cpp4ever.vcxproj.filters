@@ -38,6 +38,9 @@
     <ClCompile Include="src\Pop.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="core\CustomControl.cpp">
+      <Filter>Core Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\win10.exe.manifest">
@@ -68,6 +71,9 @@
     </ClInclude>
     <ClInclude Include="src\Pop.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\CustomControl.h">
+      <Filter>Core Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

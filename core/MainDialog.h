@@ -34,6 +34,7 @@ private:
 
 }
 
+// Implements the WinMain() entry point and instantiates the main dialog object.
 #define RUN(handlerClass) \
 int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int cmdShow) { \
 	handlerClass window; \

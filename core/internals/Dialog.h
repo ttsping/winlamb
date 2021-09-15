@@ -11,7 +11,7 @@ public:
 		virtual INT_PTR dialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) = 0;
 	};
 
-	static INT_PTR Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+	static INT_PTR CALLBACK Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 };
 
 }

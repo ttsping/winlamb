@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="core\CustomControl.cpp" />
     <ClCompile Include="core\Font.cpp" />
     <ClCompile Include="core\internals\Dialog.cpp" />
     <ClCompile Include="core\MainDialog.cpp" />
@@ -163,6 +164,7 @@
     <Manifest Include="res\win10.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="core\CustomControl.h" />
     <ClInclude Include="core\Font.h" />
     <ClInclude Include="core\internals\Dialog.h" />
     <ClInclude Include="core\MainDialog.h" />
