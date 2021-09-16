@@ -35,13 +35,16 @@ public:
 
 	void close() noexcept;
 	void open(const wchar_t* filePath, Access access);
-	Lock lock(UINT64 offset, UINT64 numBytes) const { return Lock(*this, offset, numBytes); }
-	HANDLE handle() const noexcept { return this->hf; }
-	INT64 offsetPtr() const;
+	[[nodiscard]] Lock lock(UINT64 offset, UINT64 numBytes) const { return Lock(*this, offset, numBytes); }
+	[[nodiscard]] HANDLE handle() const noexcept { return this->hf; }
+	[[nodiscard]] INT64 offsetPtr() const;
 	void offsetPtrRewind() const;
-	UINT64 size() const;
+	[[nodiscard]] UINT64 size() const;
+	void resize(UINT64 newSize) const;
+	[[nodiscard]] std::vector<BYTE> readAll() const;
 	void write(const std::vector<BYTE>& data) const;
-	std::vector<BYTE> readAll() const;
+	void eraseAndWrite(const std::vector<BYTE>& data) const;
+	
 };
 
 }

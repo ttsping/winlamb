@@ -18,7 +18,7 @@ private:
 public:
 	virtual ~Window() { }
 
-	HWND hWnd() const noexcept { return this->hw; }
+	[[nodiscard]] HWND hWnd() const noexcept { return this->hw; }
 };
 
 }

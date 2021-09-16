@@ -80,12 +80,22 @@ UINT64 File::size() const
 	return (UINT64)li.QuadPart;
 }
 
-void File::write(const vector<BYTE>& data) const
+void File::resize(UINT64 newSize) const
 {
-	DWORD written = 0;
-	if (!WriteFile(this->hf, &data[0], (DWORD)data.size(), &written, nullptr)) {
-		throw std::system_error(GetLastError(), std::system_category(), "WriteFile failed");
+	LARGE_INTEGER li = {0};
+	li.QuadPart = newSize;
+
+	if (!SetFilePointerEx(this->hf, li, nullptr, FILE_BEGIN)) {
+		if (DWORD err = GetLastError(); err != ERROR_SUCCESS) {
+			throw std::system_error(GetLastError(), std::system_category(), "SetFilePointerEx failed");
+		}
 	}
+
+	if (!SetEndOfFile(this->hf)) {
+		throw std::system_error(GetLastError(), std::system_category(), "SetEndOfFile failed");
+	}
+
+	this->offsetPtrRewind();
 }
 
 vector<BYTE> File::readAll() const
@@ -100,6 +110,21 @@ vector<BYTE> File::readAll() const
 	}
 	this->offsetPtrRewind();
 	return buf;
+}
+
+void File::write(const vector<BYTE>& data) const
+{
+	DWORD written = 0;
+	if (!WriteFile(this->hf, &data[0], (DWORD)data.size(), &written, nullptr)) {
+		throw std::system_error(GetLastError(), std::system_category(), "WriteFile failed");
+	}
+}
+
+void File::eraseAndWrite(const vector<BYTE>& data) const
+{
+	this->resize(data.size());
+	this->write(data);
+	this->offsetPtrRewind();
 }
 
 File::Lock::Lock(const File& file, UINT64 offset, UINT64 numBytes)

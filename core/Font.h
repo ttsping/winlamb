@@ -20,7 +20,7 @@ public:
 	void destroy() noexcept;
 	void create(const LOGFONT& lf);
 	void getObject(LOGFONT& lf) const;
-	HFONT hFont() const noexcept { return this->hf; }
+	[[nodiscard]] HFONT hFont() const noexcept { return this->hf; }
 
 	static const Font& UiFont();
 };
