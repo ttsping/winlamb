@@ -1,6 +1,7 @@
 
 #include "Dialog.h"
 #include "Font.h"
+#include "internals.h"
 using namespace core;
 
 INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
@@ -23,7 +24,7 @@ INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 		try {
 			return pObj->dialogProc(msg, wp, lp);
 		} catch (...) {
-			PostQuitMessage(Lippincott());
+			PostQuitMessage(core_internals::Lippincott());
 		}
 	}
 

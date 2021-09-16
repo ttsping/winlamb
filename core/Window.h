@@ -22,6 +22,3 @@ public:
 };
 
 }
-
-// Centralizes all exception handling, displaying the error with MessageBox().
-int Lippincott() noexcept;

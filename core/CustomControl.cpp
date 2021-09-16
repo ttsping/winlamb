@@ -1,5 +1,6 @@
 
 #include "CustomControl.h"
+#include "internals.h"
 #include <vsstyle.h>
 #include <Uxtheme.h>
 #pragma comment(lib, "UxTheme.lib")
@@ -105,7 +106,7 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		try {
 			return pObj->windowProc(msg, wp, lp);
 		} catch (...) {
-			PostQuitMessage(Lippincott());
+			PostQuitMessage(core_internals::Lippincott());
 		}
 	}
 

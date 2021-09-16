@@ -44,7 +44,7 @@
     <ClCompile Include="core\File.cpp">
       <Filter>Core Files</Filter>
     </ClCompile>
-    <ClCompile Include="core\Window.cpp">
+    <ClCompile Include="core\internals.cpp">
       <Filter>Core Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -88,6 +88,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="core\File.h">
+      <Filter>Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\internals.h">
       <Filter>Core Files</Filter>
     </ClInclude>
   </ItemGroup>

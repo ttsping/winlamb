@@ -2,6 +2,7 @@
 #include <system_error>
 #include <utility>
 #include "File.h"
+#include "internals.h"
 using namespace core;
 using std::vector;
 
@@ -52,18 +53,30 @@ void File::open(const wchar_t* filePath, Access access)
 
 INT64 File::offsetPtr() const
 {
-	return (INT64)SetFilePointerEx(this->hf, {0}, nullptr, FILE_CURRENT);
+	INT64 offset = (INT64)SetFilePointerEx(this->hf, {0}, nullptr, FILE_CURRENT);
+	if (!offset) {
+		if (DWORD err = GetLastError(); err != ERROR_SUCCESS) {
+			throw std::system_error(GetLastError(), std::system_category(), "SetFilePointerEx failed");
+		}
+	}
+	return offset;
 }
 
 void File::offsetPtrRewind() const
 {
-	SetFilePointerEx(this->hf, {0}, nullptr, FILE_BEGIN);
+	if (!SetFilePointerEx(this->hf, {0}, nullptr, FILE_BEGIN)) {
+		if (DWORD err = GetLastError(); err != ERROR_SUCCESS) {
+			throw std::system_error(GetLastError(), std::system_category(), "SetFilePointerEx failed");
+		}
+	}
 }
 
 UINT64 File::size() const
 {
 	LARGE_INTEGER li = {0};
-	GetFileSizeEx(this->hf, &li);
+	if (!GetFileSizeEx(this->hf, &li)) {
+		throw std::system_error(GetLastError(), std::system_category(), "GetFileSizeEx failed");
+	}
 	return (UINT64)li.QuadPart;
 }
 
@@ -79,7 +92,7 @@ vector<BYTE> File::readAll() const
 {
 	this->offsetPtrRewind();
 	UINT64 len = this->size();
-	vector<BYTE> buf(len, 0x00);
+	vector<BYTE> buf(len, 0x00); // alloc buffer
 	DWORD numRead = 0;
 
 	if (!ReadFile(this->hf, &buf[0], (DWORD)len, &numRead, nullptr)) {
@@ -87,4 +100,22 @@ vector<BYTE> File::readAll() const
 	}
 	this->offsetPtrRewind();
 	return buf;
+}
+
+File::Lock::Lock(const File& file, UINT64 offset, UINT64 numBytes)
+	: file{file}, offsetL{offset}, numBytesL{numBytes}
+{
+	if (!LockFile(this->file.handle(),
+		core_internals::Lo64(this->offsetL), core_internals::Hi64(this->offsetL),
+		core_internals::Lo64(this->numBytesL), core_internals::Hi64(this->numBytesL)))
+	{
+		throw std::system_error(GetLastError(), std::system_category(), "LockFile failed");
+	}
+}
+
+void File::Lock::unlock() const noexcept
+{
+	UnlockFile(this->file.handle(),
+		core_internals::Lo64(this->offsetL), core_internals::Hi64(this->offsetL),
+		core_internals::Lo64(this->numBytesL), core_internals::Hi64(this->numBytesL));
 }

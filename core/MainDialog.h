@@ -2,6 +2,7 @@
 #pragma once
 #include <Windows.h>
 #include "Dialog.h"
+#include "internals.h"
 
 namespace core {
 
@@ -34,7 +35,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ 
 		wndClass window; \
 		ret = window.run(hInst, cmdShow); \
 	} catch (...) { \
-		Lippincott(); \
+		core_internals::Lippincott(); \
 		ret = -1; \
 	} \
 	return ret; \

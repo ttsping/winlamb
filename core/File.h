@@ -7,6 +7,19 @@ namespace core {
 
 // Encapsulates a file HANDLE.
 class File final {
+public:
+	// Encapsulates a file lock.
+	class Lock final {
+		friend File;
+	private:
+		const File& file;
+		UINT64 offsetL, numBytesL;
+		Lock(const File& file, UINT64 offset, UINT64 numBytes);
+	public:
+		~Lock() { this->unlock(); }
+		void unlock() const noexcept;
+	};
+
 private:
 	HANDLE hf = nullptr;
 
@@ -22,6 +35,7 @@ public:
 
 	void close() noexcept;
 	void open(const wchar_t* filePath, Access access);
+	Lock lock(UINT64 offset, UINT64 numBytes) const { return Lock(*this, offset, numBytes); }
 	HANDLE handle() const noexcept { return this->hf; }
 	INT64 offsetPtr() const;
 	void offsetPtrRewind() const;
