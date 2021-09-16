@@ -29,6 +29,7 @@ INT_PTR My::dialogProc(UINT msg, WPARAM wp, LPARAM lp)
 void My::onInitDialog()
 {
 	SetWindowText(hWnd(), L"Main window here");
+	lousa.create(this, 20, 20, 300, 200);
 }
 
 void My::onOk()

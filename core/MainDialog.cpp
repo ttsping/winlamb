@@ -12,7 +12,7 @@ int MainDialog::run(HINSTANCE hInst, int cmdShow)
 	InitCommonControls();	
 
 	HWND hDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(this->dialogId),
-		nullptr, Dialog::Proc, (LPARAM)this); // pass handler obj to proc
+		nullptr, Dialog::Proc, (LPARAM)this); // pass obj pointer to proc
 	if (!hDlg) return GetLastError();
 	this->putWindowIcon(hDlg);
 	ShowWindow(hDlg, cmdShow);
