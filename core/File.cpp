@@ -4,14 +4,9 @@
 #include "File.h"
 #include "internals.h"
 using namespace core;
+using std::span;
 using std::vector;
 using std::wstring_view;
-
-File::File(File&& other) noexcept
-	: hf{other.hf}
-{
-	other.hf = nullptr;
-}
 
 File& File::operator=(File&& other) noexcept
 {
@@ -30,6 +25,8 @@ void File::close() noexcept
 
 void File::open(wstring_view filePath, Access access)
 {
+	this->close();
+
 	DWORD readWrite = GENERIC_READ | (access == Access::READ_EXISTING ? 0 : GENERIC_WRITE);
 	DWORD share = access == Access::READ_EXISTING ? FILE_SHARE_READ : 0;
 	DWORD disposition = 0;
@@ -113,18 +110,18 @@ vector<BYTE> File::readAll() const
 	return buf;
 }
 
-void File::write(const vector<BYTE>& data) const
+void File::write(span<const BYTE> bytes) const
 {
 	DWORD written = 0;
-	if (!WriteFile(this->hf, &data[0], (DWORD)data.size(), &written, nullptr)) {
+	if (!WriteFile(this->hf, bytes.data(), (DWORD)bytes.size(), &written, nullptr)) {
 		throw std::system_error(GetLastError(), std::system_category(), "WriteFile failed");
 	}
 }
 
-void File::eraseAndWrite(const vector<BYTE>& data) const
+void File::eraseAndWrite(span<const BYTE> bytes) const
 {
-	this->resize(data.size());
-	this->write(data);
+	this->resize(bytes.size());
+	this->write(bytes);
 	this->offsetPtrRewind();
 }
 

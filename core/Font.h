@@ -1,5 +1,6 @@
 
 #pragma once
+#include <utility>
 #include <Windows.h>
 
 namespace core {
@@ -14,7 +15,7 @@ public:
 
 	Font() = default;
 	explicit Font(const LOGFONT& lf) { this->create(lf); }
-	Font(Font&& other) noexcept;
+	Font(Font&& other) noexcept { this->operator=(std::move(other)); }
 	Font& operator=(Font&& other) noexcept;
 
 	void destroy() noexcept;

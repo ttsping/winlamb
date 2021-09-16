@@ -1,5 +1,6 @@
 
 #pragma once
+#include <span>
 #include <string_view>
 #include <vector>
 #include <Windows.h>
@@ -31,7 +32,7 @@ public:
 
 	File() = default;
 	File(std::wstring_view filePath, Access access) { this->open(filePath, access); }
-	File(File&& other) noexcept;
+	File(File&& other) noexcept { this->operator=(std::move(other)); }
 	File& operator=(File&& other) noexcept;
 
 	void close() noexcept;
@@ -43,8 +44,8 @@ public:
 	[[nodiscard]] UINT64 size() const;
 	void resize(UINT64 newSize) const;
 	[[nodiscard]] std::vector<BYTE> readAll() const;
-	void write(const std::vector<BYTE>& data) const;
-	void eraseAndWrite(const std::vector<BYTE>& data) const;
+	void write(std::span<const BYTE> bytes) const;
+	void eraseAndWrite(std::span<const BYTE> bytes) const;
 	
 };
 

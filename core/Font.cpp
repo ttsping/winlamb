@@ -5,12 +5,6 @@
 #include <VersionHelpers.h>
 using namespace core;
 
-Font::Font(Font&& other) noexcept
-	: hf{other.hf}
-{
-	other.hf = nullptr;
-}
-
 Font& Font::operator=(Font&& other) noexcept
 {
 	this->destroy();
