@@ -41,6 +41,9 @@
     <ClCompile Include="src\Lousa.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="core\File.cpp">
+      <Filter>Core Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\win10.exe.manifest">
@@ -80,6 +83,9 @@
     </ClInclude>
     <ClInclude Include="src\Lousa.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\File.h">
+      <Filter>Core Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -5,7 +5,7 @@
 #pragma comment(lib, "UxTheme.lib")
 using namespace core;
 
-void CustomControl::create(Window* parent, int x, int y, int cx, int cy)
+DWORD CustomControl::create(Window* parent, int x, int y, int cx, int cy)
 {
 	HINSTANCE hInst = (HINSTANCE)GetWindowLongPtrW(parent->hWnd(), GWLP_HINSTANCE);
 
@@ -27,16 +27,28 @@ void CustomControl::create(Window* parent, int x, int y, int cx, int cy)
 	wcx.lpszClassName = className;
 
 	ATOM atom = RegisterClassExW(&wcx);
-	if (!atom && GetLastError() == ERROR_CLASS_ALREADY_EXISTS) {
-		// https://devblogs.microsoft.com/oldnewthing/20150429-00/?p=44984
-		// https://devblogs.microsoft.com/oldnewthing/20041011-00/?p=37603
-		// Retrieve atom from existing window class.
-		atom = GetClassInfoExW(hInst, className, &wcx);
+	if (!atom) {
+		DWORD err = GetLastError();
+		if (err == ERROR_CLASS_ALREADY_EXISTS) {
+			// https://devblogs.microsoft.com/oldnewthing/20150429-00/?p=44984
+			// https://devblogs.microsoft.com/oldnewthing/20041011-00/?p=37603
+			// Retrieve atom from existing window class.
+			if (!(atom = GetClassInfoExW(hInst, className, &wcx))) {
+				return GetLastError();
+			}
+		} else {
+			return err;
+		}
 	}
 	
-	CreateWindowExW(this->wndExStyles, MAKEINTATOM(atom), nullptr,
+	if (!CreateWindowExW(this->wndExStyles, MAKEINTATOM(atom), nullptr,
 		this->wndStyles, x, y, cx, cy, parent->hWnd(), (HMENU)(UINT64)this->ctlId,
-		hInst, (LPVOID)this); // pass obj pointer to proc
+		hInst, (LPVOID)this)) // pass obj pointer to proc
+	{
+		return GetLastError();
+	}
+
+	return ERROR_SUCCESS;
 }
 
 WORD CustomControl::NextCtrlId()

@@ -13,7 +13,7 @@ public:
 	~Font() { this->destroy(); }
 
 	Font() = default;
-	Font(const LOGFONT& lf);
+	explicit Font(const LOGFONT& lf);
 	Font(Font&& other) noexcept;
 	Font& operator=(Font&& other) noexcept;
 
