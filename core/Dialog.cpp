@@ -1,7 +1,7 @@
 
 #include "Dialog.h"
 #include "Font.h"
-using namespace core_internals;
+using namespace core;
 
 INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {

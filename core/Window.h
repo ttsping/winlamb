@@ -2,12 +2,14 @@
 #pragma once
 #include <Windows.h>
 
-namespace core_internals {
-class Dialog;
+namespace core {
 
+class CustomControl;
+class Dialog;
 
 // Keeps the HWND handle. Base to all window classes.
 class Window {
+	friend CustomControl;
 	friend Dialog;
 
 private:

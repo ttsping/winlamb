@@ -6,7 +6,7 @@
 namespace core {
 
 // Creates and manages a modal window, created from a dialog resource.
-class ModalDialog : public core_internals::Dialog {
+class ModalDialog : public Dialog {
 private:
 	int dialogId;
 	

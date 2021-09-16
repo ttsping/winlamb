@@ -7,4 +7,7 @@ public:
 
 protected:
 	virtual INT_PTR dialogProc(UINT msg, WPARAM wp, LPARAM lp) override;
+
+private:
+	void onInitDialog();
 };

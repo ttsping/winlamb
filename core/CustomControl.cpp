@@ -2,7 +2,7 @@
 #include "CustomControl.h"
 using namespace core;
 
-void CustomControl::create(HWND hParent, int x, int y, int cx, int cy)
+void CustomControl::create(Window* parent, int x, int y, int cx, int cy)
 {
 	WNDCLASSEXW wcx = {0};
 	wcx.cbSize = sizeof(WNDCLASSEXW);
@@ -14,15 +14,16 @@ void CustomControl::create(HWND hParent, int x, int y, int cx, int cy)
 
 LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-	Handler *pHandler;
+	CustomControl* pObj;
 
 	if (msg == WM_NCCREATE) {
 		CREATESTRUCT* cs = (CREATESTRUCT*)lp;
-		pHandler = (Handler*)cs->lpCreateParams;
-		SetWindowLongPtrW(hWnd, GWLP_USERDATA, (LONG_PTR)pHandler);
+		pObj = (CustomControl*)cs->lpCreateParams;
+		pObj->hw = hWnd;
+		SetWindowLongPtrW(hWnd, GWLP_USERDATA, (LONG_PTR)pObj);
 	} else {
-		pHandler = (Handler*)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
+		pObj = (CustomControl*)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
 	}
 
-	return pHandler ? pHandler->windowProc(hWnd, msg, wp, lp) : 0;
+	return pObj ? pObj->windowProc(msg, wp, lp) : 0;
 }

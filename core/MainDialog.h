@@ -6,7 +6,7 @@
 namespace core {
 
 // Creates and manages the main window of the application, created from a dialog resource.
-class MainDialog : public core_internals::Dialog {
+class MainDialog : public Dialog {
 private:
 	int dialogId;
 	int iconId;

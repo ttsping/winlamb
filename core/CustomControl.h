@@ -1,31 +1,26 @@
 
 #pragma once
 #include <Windows.h>
+#include "Window.h"
 
 namespace core {
 
-class CustomControl final {
-public:
-	// Implement this interface to handle messages from a CustomControl object.
-	class Handler {
-	public:
-		virtual LRESULT windowProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) = 0;
-		virtual void create(HWND hParent, int x, int y, int cx, int cy) = 0;
-	};
-
+class CustomControl : public Window {
 private:
-	Handler* handler;
 	DWORD classStyles;
 	HCURSOR hCursor;
 	HBRUSH hBrushBg;
 	DWORD wndExStyles, wndStyles;
 
 public:
-	CustomControl(Handler* handler, DWORD classStyles, HCURSOR hCursor, HBRUSH hBrushBg,
+	virtual LRESULT windowProc(UINT msg, WPARAM wp, LPARAM lp) = 0;
+
+	CustomControl(DWORD classStyles, HCURSOR hCursor, HBRUSH hBrushBg,
 		DWORD wndExStyles, DWORD wndStyles)
-		: handler{handler}, classStyles{classStyles}, hCursor{hCursor}, hBrushBg{hBrushBg},
+		: classStyles{classStyles}, hCursor{hCursor}, hBrushBg{hBrushBg},
 			wndExStyles{wndExStyles}, wndStyles{wndStyles} {}
-	void create(HWND hParent, int x, int y, int cx, int cy);
+
+	virtual void create(Window* parent, int x, int y, int cx, int cy);
 
 private:
 	static LRESULT CALLBACK Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);

@@ -9,6 +9,7 @@ Pop::Pop() : ModalDialog{DLG_MAIN}
 INT_PTR Pop::dialogProc(UINT msg, WPARAM wp, LPARAM lp)
 {
 	switch (msg) {
+	case WM_INITDIALOG: onInitDialog(); return TRUE;
 	case WM_COMMAND:
 		switch LOWORD(wp) {
 		case IDCANCEL: SendMessage(hWnd(), WM_CLOSE, 0, 0); return TRUE;
@@ -17,4 +18,9 @@ INT_PTR Pop::dialogProc(UINT msg, WPARAM wp, LPARAM lp)
 	case WM_CLOSE: EndDialog(hWnd(), 0); return TRUE;
 	}
 	return FALSE;
+}
+
+void Pop::onInitDialog()
+{
+	SetWindowText(hWnd(), L"This is the modal popup");
 }

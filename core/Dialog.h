@@ -4,12 +4,9 @@
 #include "Window.h"
 
 namespace core {
-	class MainDialog;
-	class ModalDialog;
-}
 
-
-namespace core_internals {
+class MainDialog;
+class ModalDialog;
 
 // Keeps the dialog procedure. Base to all dialog-based windows.
 class Dialog : public Window {
