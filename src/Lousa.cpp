@@ -29,4 +29,5 @@ void Lousa::onClick(LPARAM lp)
 	POINT pt = {LOWORD(lp), HIWORD(lp)};
 	core::str::Dbg(L"Clicked %d %d\n", pt.x, pt.y);
 	
+	
 }

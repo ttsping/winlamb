@@ -27,8 +27,15 @@ private:
 }
 
 // Implements the WinMain() entry point and instantiates the main dialog object.
-#define RUN(handlerClass) \
+#define RUN(wndClass) \
 int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int cmdShow) { \
-	handlerClass window; \
-	return window.run(hInst, cmdShow); \
+	int ret = 0; \
+	try { \
+		wndClass window; \
+		ret = window.run(hInst, cmdShow); \
+	} catch (...) { \
+		Lippincott(); \
+		ret = -1; \
+	} \
+	return ret; \
 }

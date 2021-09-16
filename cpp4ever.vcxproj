@@ -166,6 +166,7 @@
     <ClCompile Include="core\MainDialog.cpp" />
     <ClCompile Include="core\ModalDialog.cpp" />
     <ClCompile Include="core\str.cpp" />
+    <ClCompile Include="core\Window.cpp" />
     <ClCompile Include="src\Lousa.cpp" />
     <ClCompile Include="src\My.cpp" />
     <ClCompile Include="src\Pop.cpp" />

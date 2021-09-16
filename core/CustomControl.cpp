@@ -85,8 +85,7 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		RECT rcClip = {0}; // clipping region; will draw only within this rectangle
 		HDC hdc = GetWindowDC(hWnd);
-		HTHEME hTheme = OpenThemeData(hWnd, L"LISTVIEW"); // borrow style from listview
-		if (hTheme) {
+		if (HTHEME hTheme = OpenThemeData(hWnd, L"LISTVIEW"); hTheme) { // borrow style from listview
 			SetRect(&rcClip, rc.left, rc.top, rc.left + 2, rc.bottom); // draw only the borders to avoid flickering
 			DrawThemeBackground(hTheme, hdc, LVP_LISTGROUP, 0, &rc, &rcClip); // draw themed left border
 			SetRect(&rcClip, rc.left, rc.top, rc.right, rc.top + 2);
@@ -102,5 +101,13 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 	}
 
-	return pObj ? pObj->windowProc(msg, wp, lp) : DefWindowProcW(hWnd, msg, wp, lp);
+	if (pObj) {
+		try {
+			return pObj->windowProc(msg, wp, lp);
+		} catch (...) {
+			PostQuitMessage(Lippincott());
+		}
+	}
+
+	return DefWindowProcW(hWnd, msg, wp, lp);
 }

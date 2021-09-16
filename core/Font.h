@@ -13,11 +13,12 @@ public:
 	~Font() { this->destroy(); }
 
 	Font() = default;
-	explicit Font(const LOGFONT& lf);
+	explicit Font(const LOGFONT& lf) { this->create(lf); }
 	Font(Font&& other) noexcept;
 	Font& operator=(Font&& other) noexcept;
 
 	void destroy() noexcept;
+	void create(const LOGFONT& lf);
 	void getObject(LOGFONT& lf) const;
 	HFONT hFont() const noexcept { return this->hf; }
 

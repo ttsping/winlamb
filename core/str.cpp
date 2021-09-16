@@ -45,7 +45,7 @@ wstring str::FormatError(DWORD errCode)
 
 wstring& str::RemoveDiacritics(wstring& s)
 {
-	const wchar_t* diacritics = L"ÁáÀàÃãÂâÄäÉéÈèÊêËëÍíÌìÎîÏïÓóÒòÕõÔôÖöÚúÙùÛûÜüÇçÅåĞğÑñØøİı";
+	const wchar_t* diacritics   = L"ÁáÀàÃãÂâÄäÉéÈèÊêËëÍíÌìÎîÏïÓóÒòÕõÔôÖöÚúÙùÛûÜüÇçÅåĞğÑñØøİı";
 	const wchar_t* replacements = L"AaAaAaAaAaEeEeEeEeIiIiIiIiOoOoOoOoOoUuUuUuUuCcAaDdNnOoYy";
 	for (wchar_t& ch : s) {
 		const wchar_t* pDiac = diacritics;

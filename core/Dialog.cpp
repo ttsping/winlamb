@@ -19,5 +19,13 @@ INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 		pObj = (Dialog*)GetWindowLongPtrW(hDlg, DWLP_USER);
 	}
 
-	return pObj ? pObj->dialogProc(msg, wp, lp) : FALSE;
+	if (pObj) {
+		try {
+			return pObj->dialogProc(msg, wp, lp);
+		} catch (...) {
+			PostQuitMessage(Lippincott());
+		}
+	}
+
+	return FALSE;
 }
