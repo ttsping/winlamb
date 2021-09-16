@@ -6,9 +6,9 @@ public:
 	My();
 	
 protected:
-	virtual INT_PTR dialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) override;
+	virtual INT_PTR dialogProc(UINT msg, WPARAM wp, LPARAM lp) override;
 
 private:
-	void onInitDialog(HWND hDlg);
-	void onOk(HWND hDlg);
+	void onInitDialog();
+	void onOk();
 };

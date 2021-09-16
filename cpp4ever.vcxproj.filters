@@ -72,6 +72,9 @@
     <ClInclude Include="core\Dialog.h">
       <Filter>Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="core\Window.h">
+      <Filter>Core Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\cpp4ever.rc">

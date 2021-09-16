@@ -14,7 +14,7 @@ public:
 	ModalDialog(int dialogId)
 		: dialogId{dialogId} { }
 
-	virtual INT_PTR show(HWND hParent);
+	virtual INT_PTR show(Window* parent);
 };
 
 }

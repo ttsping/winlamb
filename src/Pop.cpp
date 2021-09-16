@@ -6,15 +6,15 @@ Pop::Pop() : ModalDialog{DLG_MAIN}
 {
 }
 
-INT_PTR Pop::dialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+INT_PTR Pop::dialogProc(UINT msg, WPARAM wp, LPARAM lp)
 {
 	switch (msg) {
 	case WM_COMMAND:
 		switch LOWORD(wp) {
-		case IDCANCEL: SendMessage(hDlg, WM_CLOSE, 0, 0); return TRUE;
+		case IDCANCEL: SendMessage(hWnd(), WM_CLOSE, 0, 0); return TRUE;
 		}
 		return FALSE;
-	case WM_CLOSE: EndDialog(hDlg, 0); return TRUE;
+	case WM_CLOSE: EndDialog(hWnd(), 0); return TRUE;
 	}
 	return FALSE;
 }

@@ -10,29 +10,29 @@ My::My() : MainDialog{DLG_MAIN, ICO_DUCREUX, 0}
 {
 }
 
-INT_PTR My::dialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+INT_PTR My::dialogProc(UINT msg, WPARAM wp, LPARAM lp)
 {
 	switch (msg) {
-	case WM_INITDIALOG: onInitDialog(hDlg); return TRUE;
+	case WM_INITDIALOG: onInitDialog(); return TRUE;
 	case WM_COMMAND:
 		switch LOWORD(wp) {
-		case IDCANCEL: SendMessage(hDlg, WM_CLOSE, 0, 0); return TRUE;
-		case IDOK: onOk(hDlg); return TRUE;
+		case IDCANCEL: SendMessage(hWnd(), WM_CLOSE, 0, 0); return TRUE;
+		case IDOK: onOk(); return TRUE;
 		}
 		return FALSE;
-	case WM_CLOSE: DestroyWindow(hDlg); return TRUE;
+	case WM_CLOSE: DestroyWindow(hWnd()); return TRUE;
 	case WM_NCDESTROY: PostQuitMessage(0); return TRUE;
 	}
 	return FALSE;
 }
 
-void My::onInitDialog(HWND hDlg)
+void My::onInitDialog()
 {
-	SetWindowText(hDlg, L"Main window here");
+	SetWindowText(hWnd(), L"Main window here");
 }
 
-void My::onOk(HWND hDlg)
+void My::onOk()
 {
 	Pop pop;
-	pop.show(hDlg);
+	pop.show(this);
 }

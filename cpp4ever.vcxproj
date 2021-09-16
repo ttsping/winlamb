@@ -170,6 +170,7 @@
     <ClInclude Include="core\MainDialog.h" />
     <ClInclude Include="core\ModalDialog.h" />
     <ClInclude Include="core\str.h" />
+    <ClInclude Include="core\Window.h" />
     <ClInclude Include="res\resource.h" />
     <ClInclude Include="src\My.h" />
     <ClInclude Include="src\Pop.h" />
