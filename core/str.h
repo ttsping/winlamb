@@ -5,6 +5,9 @@
 
 namespace core::str {
 
+// Formats the string and calls OutputDebugString().
+void Dbg(const wchar_t* format, ...);
+
 // Formats the string; sprintf() wrapper.
 std::wstring Format(const wchar_t* format, ...);
 

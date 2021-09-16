@@ -9,4 +9,5 @@ public:
 
 private:
 	void onCreate();
+	void onClick(LPARAM lp);
 };

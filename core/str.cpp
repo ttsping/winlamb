@@ -4,6 +4,20 @@
 using namespace core;
 using std::wstring;
 
+void str::Dbg(const wchar_t* format, ...)
+{
+	va_list args;
+	va_start(args, format);
+
+	size_t len = vswprintf(nullptr, 0, format, args);
+	wstring ret(len + 1, L'\0'); // room for terminating null
+	vswprintf(&ret[0], len + 1, format, args);
+	ret.resize(len); // remove terminating null
+
+	va_end(args);
+	OutputDebugStringW(ret.c_str());
+}
+
 wstring str::Format(const wchar_t* format, ...)
 {
 	va_list args;
