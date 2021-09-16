@@ -16,7 +16,9 @@ private:
 	HWND hw = nullptr;
 
 public:
-	HWND hWnd() const { return this->hw; }
+	virtual ~Window() { }
+
+	HWND hWnd() const noexcept { return this->hw; }
 };
 
 }

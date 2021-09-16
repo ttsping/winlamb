@@ -14,7 +14,7 @@ INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 		EnumChildWindows(hDlg, [](HWND hCtrl, LPARAM lp) -> BOOL {
 			SendMessageW(hCtrl, WM_SETFONT, (WPARAM)(HFONT)lp, MAKELPARAM(FALSE, 0));
 			return TRUE;
-		}, (LPARAM)core::Font::UiFont().handle());
+		}, (LPARAM)core::Font::UiFont().hFont());
 	} else {
 		pObj = (Dialog*)GetWindowLongPtrW(hDlg, DWLP_USER);
 	}

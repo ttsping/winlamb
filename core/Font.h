@@ -7,10 +7,11 @@ namespace core {
 // Encapsulates an HFONT handle.
 class Font final {
 private:
-	HFONT hFont = nullptr;
+	HFONT hf = nullptr;
 
 public:
 	~Font() { this->destroy(); }
+
 	Font() = default;
 	Font(const LOGFONT& lf);
 	Font(Font&& other) noexcept;
@@ -18,7 +19,7 @@ public:
 
 	void destroy() noexcept;
 	void getObject(LOGFONT& lf) const;
-	HFONT handle() const noexcept { return this->hFont; }
+	HFONT hFont() const noexcept { return this->hf; }
 
 	static const Font& UiFont();
 };

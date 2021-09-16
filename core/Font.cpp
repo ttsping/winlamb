@@ -5,41 +5,41 @@
 using namespace core;
 
 Font::Font(const LOGFONT& lf)
-	: hFont{CreateFontIndirectW(&lf)}
+	: hf{CreateFontIndirectW(&lf)}
 {
 }
 
 Font::Font(Font&& other) noexcept
-	: hFont{other.hFont}
+	: hf{other.hf}
 {
-	other.hFont = nullptr;
+	other.hf = nullptr;
 }
 
 Font& Font::operator=(Font&& other) noexcept
 {
 	this->destroy();
-	std::swap(this->hFont, other.hFont);
+	std::swap(this->hf, other.hf);
 	return *this;
 }
 
 void Font::destroy() noexcept
 {
-	if (this->hFont) {
-		DeleteObject(this->hFont);
-		this->hFont = nullptr;
+	if (this->hf) {
+		DeleteObject(this->hf);
+		this->hf = nullptr;
 	}
 }
 
 void Font::getObject(LOGFONT& lf) const
 {
-	GetObjectW(this->hFont, sizeof(LOGFONT), &lf);
+	GetObjectW(this->hf, sizeof(LOGFONT), &lf);
 }
 
 const Font& Font::UiFont()
 {
 	static Font globalUi;
 
-	if (!globalUi.handle()) { // not created yet?
+	if (!globalUi.hFont()) { // not created yet?
 		NONCLIENTMETRICS ncm = {0};
 		ncm.cbSize = sizeof(ncm);
 		if (!IsWindowsVistaOrGreater()) ncm.cbSize -= sizeof(int);

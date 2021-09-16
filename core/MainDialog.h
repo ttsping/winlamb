@@ -8,13 +8,14 @@ namespace core {
 // Creates and manages the main window of the application, created from a dialog resource.
 class MainDialog : public Dialog {
 private:
-	int dialogId;
 	int iconId;
 	int accelId;
 
 public:
+	virtual ~MainDialog() { }
+
 	MainDialog(int dialogId, int iconId, int accelId)
-		: dialogId{dialogId}, iconId{iconId}, accelId{accelId} { }
+		: Dialog{dialogId}, iconId{iconId}, accelId{accelId} { }
 
 	virtual int run(HINSTANCE hInst, int cmdShow);
 

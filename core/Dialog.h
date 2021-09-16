@@ -13,7 +13,13 @@ class Dialog : public Window {
 	friend core::MainDialog;
 	friend core::ModalDialog;
 
+private:
+	int dialogId;
+
 public:
+	virtual ~Dialog() { }
+
+	Dialog(int dialogId) : dialogId{dialogId} { }
 	virtual INT_PTR dialogProc(UINT msg, WPARAM wp, LPARAM lp) = 0;
 
 private:
