@@ -5,18 +5,50 @@ using namespace core;
 using std::wstring;
 using std::wstring_view;
 
+[[nodiscard]] static bool _EndsStartsFirstCheck(wstring_view s, wstring_view ending)
+{
+	if (s.empty()) return false;
+	if (!ending.length() || ending.length() > s.length()) return false;
+	return true;
+}
+
+static wstring _Format(wstring_view format, va_list args)
+{
+	size_t len = vswprintf(nullptr, 0, format.data(), args);
+	wstring ret(len + 1, L'\0'); // room for terminating null
+	vswprintf(&ret[0], len + 1, format.data(), args);
+	ret.resize(len); // remove terminating null
+	return ret;
+}
+
 void str::Dbg(wstring_view format, ...)
 {
 	va_list args;
 	va_start(args, format);
 
-	size_t len = vswprintf(nullptr, 0, format.data(), args);
-	wstring ret(len + 1, L'\0'); // room for terminating null
-	vswprintf(&ret[0], len + 1, format.data(), args);
-	ret.resize(len); // remove terminating null
+	wstring s = _Format(format, args);
 
 	va_end(args);
-	OutputDebugStringW(ret.c_str());
+	OutputDebugStringW(s.c_str());
+}
+
+bool str::EndsWith(std::wstring_view s, std::wstring_view ending)
+{
+	if (!_EndsStartsFirstCheck(s, ending)) return false;
+	return !wcsncmp(s.data() + s.length() - ending.length(),
+		ending.data(), ending.length());
+}
+
+bool str::EndsWithI(std::wstring_view s, std::wstring_view ending)
+{
+	if (!_EndsStartsFirstCheck(s, ending)) return false;
+	return !_wcsnicmp(s.data() + s.length() - ending.length(),
+		ending.data(), ending.length());
+}
+
+bool str::EqI(std::wstring_view s1, std::wstring_view s2)
+{
+	return lstrcmpiW(s1.data(), s2.data());
 }
 
 wstring str::Format(wstring_view format, ...)
@@ -24,24 +56,10 @@ wstring str::Format(wstring_view format, ...)
 	va_list args;
 	va_start(args, format);
 
-	size_t len = vswprintf(nullptr, 0, format.data(), args);
-	wstring ret(len + 1, L'\0'); // room for terminating null
-	vswprintf(&ret[0], len + 1, format.data(), args);
-	ret.resize(len); // remove terminating null
+	wstring ret = _Format(format, args);
 
 	va_end(args);
 	return ret;
-}
-
-wstring str::FormatError(DWORD errCode)
-{
-	wchar_t* buf = nullptr;
-	FormatMessageW(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		nullptr, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&buf, 0, nullptr);
-	wstring text = buf;
-	LocalFree(buf);
-	return text;
 }
 
 wstring& str::RemoveDiacritics(wstring& s)
@@ -67,6 +85,18 @@ wstring& str::Reverse(wstring& s)
 		std::swap(s[i], s[s.length() - i - 1]);
 	}
 	return s;
+}
+
+bool str::StartsWith(wstring_view s, wstring_view start)
+{
+	if (!_EndsStartsFirstCheck(s, start)) return false;
+	return !wcsncmp(s.data(), start.data(), start.length());
+}
+
+bool str::StartsWithI(wstring_view s, wstring_view start)
+{
+	if (!_EndsStartsFirstCheck(s, start)) return false;
+	return !_wcsnicmp(s.data(), start.data(), start.length());
 }
 
 wstring str::ToLower(wstring_view s)
