@@ -1,6 +1,5 @@
 
 #include <system_error>
-#include <Windows.h>
 #include "internals.h"
 using std::tuple;
 

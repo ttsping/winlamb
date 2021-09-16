@@ -3,29 +3,30 @@
 #include "str.h"
 using namespace core;
 using std::wstring;
+using std::wstring_view;
 
-void str::Dbg(const wchar_t* format, ...)
+void str::Dbg(wstring_view format, ...)
 {
 	va_list args;
 	va_start(args, format);
 
-	size_t len = vswprintf(nullptr, 0, format, args);
+	size_t len = vswprintf(nullptr, 0, format.data(), args);
 	wstring ret(len + 1, L'\0'); // room for terminating null
-	vswprintf(&ret[0], len + 1, format, args);
+	vswprintf(&ret[0], len + 1, format.data(), args);
 	ret.resize(len); // remove terminating null
 
 	va_end(args);
 	OutputDebugStringW(ret.c_str());
 }
 
-wstring str::Format(const wchar_t* format, ...)
+wstring str::Format(wstring_view format, ...)
 {
 	va_list args;
 	va_start(args, format);
 
-	size_t len = vswprintf(nullptr, 0, format, args);
+	size_t len = vswprintf(nullptr, 0, format.data(), args);
 	wstring ret(len + 1, L'\0'); // room for terminating null
-	vswprintf(&ret[0], len + 1, format, args);
+	vswprintf(&ret[0], len + 1, format.data(), args);
 	ret.resize(len); // remove terminating null
 
 	va_end(args);
@@ -68,16 +69,16 @@ wstring& str::Reverse(wstring& s)
 	return s;
 }
 
-wstring str::ToLower(const wstring& s)
+wstring str::ToLower(wstring_view s)
 {
-	wstring ret = s;
+	wstring ret = s.data();
 	CharLowerBuffW(&ret[0], static_cast<DWORD>(ret.length()));
 	return ret;
 }
 
-wstring str::ToUpper(const wstring& s)
+wstring str::ToUpper(wstring_view s)
 {
-	wstring ret = s;
+	wstring ret = s.data();
 	CharUpperBuffW(&ret[0], static_cast<DWORD>(ret.length()));
 	return ret;
 }

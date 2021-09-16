@@ -47,6 +47,9 @@
     <ClCompile Include="core\internals.cpp">
       <Filter>Core Files</Filter>
     </ClCompile>
+    <ClCompile Include="core\FileMapped.cpp">
+      <Filter>Core Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\win10.exe.manifest">
@@ -91,6 +94,9 @@
       <Filter>Core Files</Filter>
     </ClInclude>
     <ClInclude Include="core\internals.h">
+      <Filter>Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\FileMapped.h">
       <Filter>Core Files</Filter>
     </ClInclude>
   </ItemGroup>

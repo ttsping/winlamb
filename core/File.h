@@ -1,5 +1,6 @@
 
 #pragma once
+#include <string_view>
 #include <vector>
 #include <Windows.h>
 
@@ -29,12 +30,12 @@ public:
 	~File() { this->close(); }
 
 	File() = default;
-	File(const wchar_t* filePath, Access access) { this->open(filePath, access); }
+	File(std::wstring_view filePath, Access access) { this->open(filePath, access); }
 	File(File&& other) noexcept;
 	File& operator=(File&& other) noexcept;
 
 	void close() noexcept;
-	void open(const wchar_t* filePath, Access access);
+	void open(std::wstring_view filePath, Access access);
 	[[nodiscard]] Lock lock(UINT64 offset, UINT64 numBytes) const { return Lock(*this, offset, numBytes); }
 	[[nodiscard]] HANDLE handle() const noexcept { return this->hf; }
 	[[nodiscard]] INT64 offsetPtr() const;

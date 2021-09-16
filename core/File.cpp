@@ -5,6 +5,7 @@
 #include "internals.h"
 using namespace core;
 using std::vector;
+using std::wstring_view;
 
 File::File(File&& other) noexcept
 	: hf{other.hf}
@@ -27,7 +28,7 @@ void File::close() noexcept
 	}
 }
 
-void File::open(const wchar_t* filePath, Access access)
+void File::open(wstring_view filePath, Access access)
 {
 	DWORD readWrite = GENERIC_READ | (access == Access::READ_EXISTING ? 0 : GENERIC_WRITE);
 	DWORD share = access == Access::READ_EXISTING ? FILE_SHARE_READ : 0;
@@ -44,7 +45,7 @@ void File::open(const wchar_t* filePath, Access access)
 		disposition = OPEN_ALWAYS;
 	}
 
-	if (!(this->hf = CreateFileW(filePath, readWrite, share, nullptr,
+	if (!(this->hf = CreateFileW(filePath.data(), readWrite, share, nullptr,
 		disposition, FILE_ATTRIBUTE_NORMAL, nullptr)))
 	{
 		throw std::system_error(GetLastError(), std::system_category(), "CreateFileW failed");

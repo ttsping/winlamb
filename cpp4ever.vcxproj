@@ -162,6 +162,7 @@
     <ClCompile Include="core\CustomControl.cpp" />
     <ClCompile Include="core\Dialog.cpp" />
     <ClCompile Include="core\File.cpp" />
+    <ClCompile Include="core\FileMapped.cpp" />
     <ClCompile Include="core\Font.cpp" />
     <ClCompile Include="core\internals.cpp" />
     <ClCompile Include="core\MainDialog.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="core\CustomControl.h" />
     <ClInclude Include="core\Dialog.h" />
     <ClInclude Include="core\File.h" />
+    <ClInclude Include="core\FileMapped.h" />
     <ClInclude Include="core\Font.h" />
     <ClInclude Include="core\internals.h" />
     <ClInclude Include="core\MainDialog.h" />
