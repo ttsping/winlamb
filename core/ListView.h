@@ -1,7 +1,9 @@
 
 #pragma once
-#include "NativeControl.h"
 #include <string_view>
+#include "NativeControl.h"
+#include "ImageList.h"
+#include <CommCtrl.h>
 
 namespace core {
 
@@ -15,10 +17,10 @@ public:
 		ListView& lv;
 		Columns(ListView& lv) : lv{lv} { }
 	public:
-		UINT count() const;
+		[[nodiscard]] UINT count() const;
 		const Columns& add(std::wstring_view text, int size) const;
 		void stretch(int index) const;
-		UINT width(int index) const;
+		[[nodiscard]] UINT width(int index) const;
 	};
 
 	// Expose item methods of a ListView.
@@ -28,7 +30,7 @@ public:
 		ListView& lv;
 		Items(ListView& lv) : lv{lv} { }
 	public:
-		UINT count() const;
+		[[nodiscard]] UINT count() const;
 		UINT add(int iconIdx, std::initializer_list<std::wstring_view> texts) const;
 		void remove(int index) const;
 	};
@@ -38,6 +40,9 @@ public:
 
 	explicit ListView(HWND hCtrl) : NativeControl{hCtrl} { }
 	ListView(HWND hDlg, int ctrlId) : NativeControl{GetDlgItem(hDlg, ctrlId)} { }
+
+	void setExtendedStyle(bool set, DWORD exStyle) const;
+	void setImageList(const ImageList& imgLst, DWORD normalOrSmall = LVSIL_NORMAL) const;
 };
 
 }

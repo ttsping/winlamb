@@ -94,3 +94,13 @@ void ListView::Items::remove(int index) const
 		throw std::system_error(GetLastError(), std::system_category(), "LVM_DELETEITEM failed");
 	}
 }
+
+void ListView::setExtendedStyle(bool set, DWORD exStyles) const
+{
+	SendMessageW(this->hWnd(), LVM_SETEXTENDEDLISTVIEWSTYLE, exStyles, set ? exStyles : 0);
+}
+
+void ListView::setImageList(const ImageList& imgLst, DWORD normalOrSmall) const
+{
+	SendMessageW(this->hWnd(), LVM_SETIMAGELIST, normalOrSmall, (LPARAM)imgLst.hImageList());
+}
