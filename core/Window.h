@@ -21,7 +21,7 @@ public:
 	Window() = default;
 	explicit Window(HWND hWnd) : hw{hWnd} { }
 
-	[[nodiscard]] constexpr HWND hWnd() { return this->hw; }
+	[[nodiscard]] constexpr HWND hWnd() const { return this->hw; }
 };
 
 }

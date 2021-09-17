@@ -21,7 +21,7 @@ public:
 	void destroy() noexcept;
 	void create(const LOGFONT& lf);
 	void getObject(LOGFONT& lf) const;
-	[[nodiscard]] HFONT hFont() const noexcept { return this->hf; }
+	[[nodiscard]] constexpr HFONT hFont() const { return this->hf; }
 
 	static const Font& UiFont();
 };

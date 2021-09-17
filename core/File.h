@@ -20,6 +20,8 @@ public:
 	public:
 		~Lock() { this->unlock(); }
 		void unlock() const noexcept;
+		[[nodiscard]] constexpr UINT64 offset() const { return this->offsetL; }
+		[[nodiscard]] constexpr UINT64 numBytes() const { return this->numBytesL; }
 	};
 
 private:
@@ -38,7 +40,7 @@ public:
 	void close() noexcept;
 	void open(std::wstring_view filePath, Access access);
 	[[nodiscard]] Lock lock(UINT64 offset, UINT64 numBytes) const { return Lock(*this, offset, numBytes); }
-	[[nodiscard]] HANDLE handle() const noexcept { return this->hf; }
+	[[nodiscard]] constexpr HANDLE handle() const { return this->hf; }
 	[[nodiscard]] INT64 offsetPtr() const;
 	void offsetPtrRewind() const;
 	[[nodiscard]] UINT64 size() const;

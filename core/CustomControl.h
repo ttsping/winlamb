@@ -22,7 +22,7 @@ public:
 
 	virtual LRESULT windowProc(UINT msg, WPARAM wp, LPARAM lp) = 0;
 	virtual DWORD create(Window* parent, int x, int y, int cx, int cy);
-	[[nodiscard]] WORD ctrlId() const noexcept { return this->ctlId; }
+	[[nodiscard]] constexpr WORD ctrlId() const { return this->ctlId; }
 
 private:
 	[[nodiscard]] static WORD NextCtrlId();
