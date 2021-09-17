@@ -41,7 +41,7 @@ DWORD CustomControl::create(Window* parent, int x, int y, int cx, int cy)
 			return err;
 		}
 	}
-	
+
 	if (!CreateWindowExW(this->wndExStyles, MAKEINTATOM(atom), nullptr,
 		this->wndStyles, x, y, cx, cy, parent->hWnd(), (HMENU)(UINT64)this->ctlId,
 		hInst, (LPVOID)this)) // pass obj pointer to proc

@@ -10,7 +10,7 @@ using std::wstring;
 
 int MainDialog::run(HINSTANCE hInst, int cmdShow)
 {
-	InitCommonControls();	
+	InitCommonControls();
 
 	HWND hDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(this->dialogId),
 		nullptr, Dialog::Proc, (LPARAM)this); // pass obj pointer to proc

@@ -45,6 +45,6 @@ const Font& Font::UiFont()
 		}
 		globalUi = Font{ncm.lfMenuFont};
 	}
-	
+
 	return globalUi;
 }

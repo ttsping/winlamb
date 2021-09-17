@@ -20,7 +20,7 @@ public:
 
 	virtual int run(HINSTANCE hInst, int cmdShow);
 
-private:	
+private:
 	void putWindowIcon(HWND hDlg);
 	int loop(HWND hDlg, HACCEL hAccel);
 };
