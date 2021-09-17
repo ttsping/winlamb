@@ -3,7 +3,6 @@
 #include <span>
 #include <string_view>
 #include <vector>
-#include <Windows.h>
 #include "File.h"
 
 namespace core {
@@ -29,7 +28,7 @@ public:
 
 	void close() noexcept;
 	void open(std::wstring_view filePath, Access access);
-	[[nodiscard]] UINT64 size() const { return this->sz; }
+	[[nodiscard]] constexpr UINT64 size() { return this->sz; }
 	void resize(UINT64 newSize);
 	[[nodiscard]] std::span<const BYTE> hotSpan() const { return std::span{(const BYTE*)this->pMem, this->sz}; }
 	[[nodiscard]] std::span<BYTE> hotSpan() { return std::span{(BYTE*)this->pMem, this->sz}; }

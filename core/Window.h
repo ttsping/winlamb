@@ -18,7 +18,10 @@ private:
 public:
 	virtual ~Window() { }
 
-	[[nodiscard]] HWND hWnd() const noexcept { return this->hw; }
+	Window() = default;
+	explicit Window(HWND hWnd) : hw{hWnd} { }
+
+	[[nodiscard]] constexpr HWND hWnd() { return this->hw; }
 };
 
 }

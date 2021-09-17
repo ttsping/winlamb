@@ -46,7 +46,6 @@ public:
 	[[nodiscard]] std::vector<BYTE> readAll() const;
 	void write(std::span<const BYTE> bytes) const;
 	void eraseAndWrite(std::span<const BYTE> bytes) const;
-
 };
 
 }
