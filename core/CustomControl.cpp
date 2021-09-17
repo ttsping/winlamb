@@ -1,12 +1,14 @@
 
+#include <system_error>
 #include "CustomControl.h"
 #include "internals.h"
 #include <vsstyle.h>
 #include <Uxtheme.h>
 #pragma comment(lib, "UxTheme.lib")
 using namespace core;
+using std::system_error;
 
-DWORD CustomControl::create(Window* parent, int x, int y, int cx, int cy)
+void CustomControl::create(Window* parent, int x, int y, int cx, int cy)
 {
 	HINSTANCE hInst = (HINSTANCE)GetWindowLongPtrW(parent->hWnd(), GWLP_HINSTANCE);
 
@@ -29,16 +31,15 @@ DWORD CustomControl::create(Window* parent, int x, int y, int cx, int cy)
 
 	ATOM atom = RegisterClassExW(&wcx);
 	if (!atom) {
-		DWORD err = GetLastError();
-		if (err == ERROR_CLASS_ALREADY_EXISTS) {
+		if (DWORD err = GetLastError(); err == ERROR_CLASS_ALREADY_EXISTS) {
 			// https://devblogs.microsoft.com/oldnewthing/20150429-00/?p=44984
 			// https://devblogs.microsoft.com/oldnewthing/20041011-00/?p=37603
 			// Retrieve atom from existing window class.
 			if (!(atom = GetClassInfoExW(hInst, className, &wcx))) {
-				return GetLastError();
+				throw system_error(GetLastError(), std::system_category(), "GetClassInfoExW failed");
 			}
 		} else {
-			return err;
+			throw system_error(err, std::system_category(), "RegisterClassExW failed");
 		}
 	}
 
@@ -46,10 +47,8 @@ DWORD CustomControl::create(Window* parent, int x, int y, int cx, int cy)
 		this->wndStyles, x, y, cx, cy, parent->hWnd(), (HMENU)(UINT64)this->ctlId,
 		hInst, (LPVOID)this)) // pass obj pointer to proc
 	{
-		return GetLastError();
+		throw system_error(GetLastError(), std::system_category(), "CreateWindowExW failed");
 	}
-
-	return ERROR_SUCCESS;
 }
 
 WORD CustomControl::NextCtrlId()

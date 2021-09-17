@@ -3,6 +3,7 @@
 #include "FileMapped.h"
 using namespace core;
 using std::span;
+using std::system_error;
 using std::vector;
 using std::wstring_view;
 
@@ -54,13 +55,13 @@ void FileMapped::mapInMemory()
 		this->readOnly ? PAGE_READONLY : PAGE_READWRITE,
 		0, 0, nullptr)))
 	{
-		throw std::system_error(GetLastError(), std::system_category(), "CreateFileMappingW failed");
+		throw system_error(GetLastError(), std::system_category(), "CreateFileMappingW failed");
 	}
 
 	if (!(this->pMem = MapViewOfFile(this->hMap,
 		this->readOnly ? FILE_MAP_READ : FILE_MAP_WRITE, 0, 0, 0)))
 	{
-		throw std::system_error(GetLastError(), std::system_category(), "MapViewOfFile failed");
+		throw system_error(GetLastError(), std::system_category(), "MapViewOfFile failed");
 	}
 }
 

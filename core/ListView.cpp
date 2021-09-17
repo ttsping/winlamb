@@ -4,18 +4,19 @@
 #include <CommCtrl.h>
 using namespace core;
 using std::initializer_list;
+using std::system_error;
 using std::wstring_view;
 
 UINT ListView::Columns::count() const
 {
 	HWND hHeader = (HWND)SendMessageW(this->lv.hWnd(), LVM_GETHEADER, 0, 0);
 	if (!hHeader) {
-		throw std::system_error(GetLastError(), std::system_category(), "LVM_GETHEADER failed");
+		throw system_error(GetLastError(), std::system_category(), "LVM_GETHEADER failed");
 	}
 
 	int count = (int)SendMessageW(hHeader, HDM_GETITEMCOUNT, 0, 0);
 	if (count == -1) {
-		throw std::system_error(GetLastError(), std::system_category(), "HDM_GETITEMCOUNT failed");
+		throw system_error(GetLastError(), std::system_category(), "HDM_GETITEMCOUNT failed");
 	}
 
 	return count;
@@ -29,7 +30,7 @@ const ListView::Columns& ListView::Columns::add(std::wstring_view text, int size
 	lvc.pszText = (LPWSTR)text.data();
 
 	if (SendMessageW(this->lv.hWnd(), LVM_INSERTCOLUMN, 0xffff, (LPARAM)&lvc) == -1) {
-		throw std::system_error(GetLastError(), std::system_category(), "LVM_INSERTCOLUMN failed");
+		throw system_error(GetLastError(), std::system_category(), "LVM_INSERTCOLUMN failed");
 	}
 
 	return *this;
@@ -49,7 +50,7 @@ void ListView::Columns::stretch(int index) const
 	RECT rc = {0};
 	GetClientRect(this->lv.hWnd(), &rc); // ListView client area
 	if (!SendMessageW(this->lv.hWnd(), LVM_SETCOLUMNWIDTH, index, rc.right - cxUsed)) {
-		throw std::system_error(GetLastError(), std::system_category(), "LVM_SETCOLUMNWIDTH failed");
+		throw system_error(GetLastError(), std::system_category(), "LVM_SETCOLUMNWIDTH failed");
 	}
 }
 
@@ -73,7 +74,7 @@ UINT ListView::Items::add(int iconIdx, initializer_list<wstring_view> texts) con
 
 	int newIdx = (int)SendMessageW(this->lv.hWnd(), LVM_INSERTITEM, 0, (LPARAM)&lvi);
 	if (newIdx == -1) {
-		throw std::system_error(GetLastError(), std::system_category(), "LVM_INSERTITEM failed");
+		throw system_error(GetLastError(), std::system_category(), "LVM_INSERTITEM failed");
 	}
 
 	for (UINT i = 1; i < texts.size(); ++i) {
@@ -81,7 +82,7 @@ UINT ListView::Items::add(int iconIdx, initializer_list<wstring_view> texts) con
 		lvi.pszText = (LPWSTR)(texts.begin() + i)->data();
 
 		if (!SendMessageW(this->lv.hWnd(), LVM_SETITEMTEXT, newIdx, (LPARAM)&lvi)) {
-			throw std::system_error(GetLastError(), std::system_category(), "LVM_SETITEMTEXT failed");
+			throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMTEXT failed");
 		}
 	}
 
@@ -91,7 +92,7 @@ UINT ListView::Items::add(int iconIdx, initializer_list<wstring_view> texts) con
 void ListView::Items::remove(int index) const
 {
 	if (!SendMessageW(this->lv.hWnd(), LVM_DELETEITEM, index, 0)) {
-		throw std::system_error(GetLastError(), std::system_category(), "LVM_DELETEITEM failed");
+		throw system_error(GetLastError(), std::system_category(), "LVM_DELETEITEM failed");
 	}
 }
 

@@ -6,6 +6,7 @@
 #include "../core/str.h"
 #pragma comment(lib, "Comctl32.lib")
 using namespace core;
+using std::system_error;
 using std::wstring;
 
 int MainDialog::run(HINSTANCE hInst, int cmdShow)
@@ -15,7 +16,7 @@ int MainDialog::run(HINSTANCE hInst, int cmdShow)
 	HWND hDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(this->dialogId),
 		nullptr, Dialog::Proc, (LPARAM)this); // pass obj pointer to proc
 	if (!hDlg) {
-		throw std::system_error(GetLastError(), std::system_category(), "CreateDialogParamW failed");
+		throw system_error(GetLastError(), std::system_category(), "CreateDialogParamW failed");
 	}
 	this->putWindowIcon(hDlg);
 	ShowWindow(hDlg, cmdShow);
@@ -45,7 +46,7 @@ int MainDialog::loop(HWND hDlg, HACCEL hAccel)
 
 	for (;;) {
 		if (BOOL ret = GetMessageW(&msg, nullptr, 0, 0); ret == -1) {
-			throw std::system_error(GetLastError(), std::system_category(), "GetMessageW failed");
+			throw system_error(GetLastError(), std::system_category(), "GetMessageW failed");
 		} else if (ret == 0) { // WM_QUIT was sent, exit gracefully
 			break;
 		}

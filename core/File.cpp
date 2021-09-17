@@ -5,6 +5,7 @@
 #include "internals.h"
 using namespace core;
 using std::span;
+using std::system_error;
 using std::vector;
 using std::wstring_view;
 
@@ -45,7 +46,7 @@ void File::open(wstring_view filePath, Access access)
 	if (!(this->hf = CreateFileW(filePath.data(), readWrite, share, nullptr,
 		disposition, FILE_ATTRIBUTE_NORMAL, nullptr)))
 	{
-		throw std::system_error(GetLastError(), std::system_category(), "CreateFileW failed");
+		throw system_error(GetLastError(), std::system_category(), "CreateFileW failed");
 	}
 }
 
@@ -54,7 +55,7 @@ INT64 File::offsetPtr() const
 	INT64 offset = (INT64)SetFilePointerEx(this->hf, {0}, nullptr, FILE_CURRENT);
 	if (!offset) {
 		if (DWORD err = GetLastError(); err != ERROR_SUCCESS) {
-			throw std::system_error(GetLastError(), std::system_category(), "SetFilePointerEx failed");
+			throw system_error(GetLastError(), std::system_category(), "SetFilePointerEx failed");
 		}
 	}
 	return offset;
@@ -64,7 +65,7 @@ void File::offsetPtrRewind() const
 {
 	if (!SetFilePointerEx(this->hf, {0}, nullptr, FILE_BEGIN)) {
 		if (DWORD err = GetLastError(); err != ERROR_SUCCESS) {
-			throw std::system_error(GetLastError(), std::system_category(), "SetFilePointerEx failed");
+			throw system_error(GetLastError(), std::system_category(), "SetFilePointerEx failed");
 		}
 	}
 }
@@ -73,7 +74,7 @@ UINT64 File::size() const
 {
 	LARGE_INTEGER li = {0};
 	if (!GetFileSizeEx(this->hf, &li)) {
-		throw std::system_error(GetLastError(), std::system_category(), "GetFileSizeEx failed");
+		throw system_error(GetLastError(), std::system_category(), "GetFileSizeEx failed");
 	}
 	return (UINT64)li.QuadPart;
 }
@@ -85,12 +86,12 @@ void File::resize(UINT64 newSize) const
 
 	if (!SetFilePointerEx(this->hf, li, nullptr, FILE_BEGIN)) {
 		if (DWORD err = GetLastError(); err != ERROR_SUCCESS) {
-			throw std::system_error(GetLastError(), std::system_category(), "SetFilePointerEx failed");
+			throw system_error(GetLastError(), std::system_category(), "SetFilePointerEx failed");
 		}
 	}
 
 	if (!SetEndOfFile(this->hf)) {
-		throw std::system_error(GetLastError(), std::system_category(), "SetEndOfFile failed");
+		throw system_error(GetLastError(), std::system_category(), "SetEndOfFile failed");
 	}
 
 	this->offsetPtrRewind();
@@ -104,7 +105,7 @@ vector<BYTE> File::readAll() const
 	DWORD numRead = 0;
 
 	if (!ReadFile(this->hf, &buf[0], (DWORD)len, &numRead, nullptr)) {
-		throw std::system_error(GetLastError(), std::system_category(), "ReadFile failed");
+		throw system_error(GetLastError(), std::system_category(), "ReadFile failed");
 	}
 	this->offsetPtrRewind();
 	return buf;
@@ -114,7 +115,7 @@ void File::write(span<const BYTE> bytes) const
 {
 	DWORD written = 0;
 	if (!WriteFile(this->hf, bytes.data(), (DWORD)bytes.size(), &written, nullptr)) {
-		throw std::system_error(GetLastError(), std::system_category(), "WriteFile failed");
+		throw system_error(GetLastError(), std::system_category(), "WriteFile failed");
 	}
 }
 
@@ -132,7 +133,7 @@ File::Lock::Lock(const File& file, UINT64 offset, UINT64 numBytes)
 		core_internals::Lo64(this->offsetL), core_internals::Hi64(this->offsetL),
 		core_internals::Lo64(this->numBytesL), core_internals::Hi64(this->numBytesL)))
 	{
-		throw std::system_error(GetLastError(), std::system_category(), "LockFile failed");
+		throw system_error(GetLastError(), std::system_category(), "LockFile failed");
 	}
 }
 

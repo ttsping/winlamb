@@ -9,6 +9,7 @@ namespace core {
 class ImageList final {
 private:
 	HIMAGELIST hil;
+	SIZE sz;
 
 public:
 	~ImageList() { this->destroy(); }
@@ -19,6 +20,7 @@ public:
 
 	void destroy() noexcept;
 	[[nodiscard]] constexpr HIMAGELIST hImageList() const { return this->hil; }
+	void loadIconResource(int iconIdx) const;
 };
 
 }

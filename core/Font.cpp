@@ -4,6 +4,7 @@
 #include "Font.h"
 #include <VersionHelpers.h>
 using namespace core;
+using std::system_error;
 
 Font& Font::operator=(Font&& other) noexcept
 {
@@ -23,7 +24,7 @@ void Font::destroy() noexcept
 void Font::create(const LOGFONT& lf)
 {
 	if (!(this->hf = CreateFontIndirectW(&lf))) {
-		throw std::system_error(GetLastError(), std::system_category(), "CreateFontIndirectW failed");
+		throw system_error(GetLastError(), std::system_category(), "CreateFontIndirectW failed");
 	}
 }
 
@@ -41,7 +42,7 @@ const Font& Font::UiFont()
 		ncm.cbSize = sizeof(ncm);
 		if (!IsWindowsVistaOrGreater()) ncm.cbSize -= sizeof(int);
 		if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0)) {
-			throw std::system_error(GetLastError(), std::system_category(), "SystemParametersInfoW failed");
+			throw system_error(GetLastError(), std::system_category(), "SystemParametersInfoW failed");
 		}
 		globalUi = Font{ncm.lfMenuFont};
 	}

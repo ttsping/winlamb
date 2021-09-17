@@ -21,7 +21,7 @@ public:
 			wndExStyles{wndExStyles}, wndStyles{wndStyles}, ctlId{NextCtrlId()} {}
 
 	virtual LRESULT windowProc(UINT msg, WPARAM wp, LPARAM lp) = 0;
-	virtual DWORD create(Window* parent, int x, int y, int cx, int cy);
+	virtual void create(Window* parent, int x, int y, int cx, int cy);
 	[[nodiscard]] constexpr WORD ctrlId() const { return this->ctlId; }
 
 private:
