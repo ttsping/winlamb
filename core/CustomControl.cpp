@@ -71,34 +71,7 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	}
 
 	if (msg == WM_NCPAINT) { // will never be handled by the user
-		DefWindowProcW(hWnd, WM_NCPAINT, wp, lp); // make system draw the scrollbar for us
-
-		if (!(GetWindowLongPtrW(hWnd, GWL_EXSTYLE) & WS_EX_CLIENTEDGE) ||
-			!IsThemeActive() ||
-			!IsAppThemed()) return 0;
-
-		RECT rc = {0};
-		GetWindowRect(hWnd, &rc); // window outmost coordinates, including margins
-		ScreenToClient(hWnd, (POINT*)&rc);
-		ScreenToClient(hWnd, (POINT*)&rc.right);
-		rc.left += 2; rc.top += 2; rc.right += 2; rc.bottom += 2; // because it comes up anchored at -2,-2
-
-		RECT rcClip = {0}; // clipping region; will draw only within this rectangle
-		HDC hdc = GetWindowDC(hWnd);
-		if (HTHEME hTheme = OpenThemeData(hWnd, L"LISTVIEW"); hTheme) { // borrow style from listview
-			SetRect(&rcClip, rc.left, rc.top, rc.left + 2, rc.bottom); // draw only the borders to avoid flickering
-			DrawThemeBackground(hTheme, hdc, LVP_LISTGROUP, 0, &rc, &rcClip); // draw themed left border
-			SetRect(&rcClip, rc.left, rc.top, rc.right, rc.top + 2);
-			DrawThemeBackground(hTheme, hdc, LVP_LISTGROUP, 0, &rc, &rcClip); // draw themed top border
-			SetRect(&rcClip, rc.right - 2, rc.top, rc.right, rc.bottom);
-			DrawThemeBackground(hTheme, hdc, LVP_LISTGROUP, 0, &rc, &rcClip); // draw themed right border
-			SetRect(&rcClip, rc.left, rc.bottom - 2, rc.right, rc.bottom);
-			DrawThemeBackground(hTheme, hdc, LVP_LISTGROUP, 0, &rc, &rcClip); // draw themed bottom border
-
-			CloseThemeData(hTheme);
-		}
-		ReleaseDC(hWnd, hdc);
-		return 0;
+		return CustomControl::PaintThemeBorders(hWnd, wp, lp);
 	}
 
 	if (pObj) {
@@ -110,4 +83,36 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	}
 
 	return DefWindowProcW(hWnd, msg, wp, lp);
+}
+
+LRESULT CustomControl::PaintThemeBorders(HWND hWnd, WPARAM wp, LPARAM lp)
+{
+	DefWindowProcW(hWnd, WM_NCPAINT, wp, lp); // make system draw the scrollbar for us
+
+	if (!(GetWindowLongPtrW(hWnd, GWL_EXSTYLE) & WS_EX_CLIENTEDGE) ||
+		!IsThemeActive() ||
+		!IsAppThemed()) return 0;
+
+	RECT rc = {0};
+	GetWindowRect(hWnd, &rc); // window outmost coordinates, including margins
+	ScreenToClient(hWnd, (POINT*)&rc);
+	ScreenToClient(hWnd, (POINT*)&rc.right);
+	rc.left += 2; rc.top += 2; rc.right += 2; rc.bottom += 2; // because it comes up anchored at -2,-2
+
+	RECT rcClip = {0}; // clipping region; will draw only within this rectangle
+	HDC hdc = GetWindowDC(hWnd);
+	if (HTHEME hTheme = OpenThemeData(hWnd, L"LISTVIEW"); hTheme) { // borrow style from listview
+		SetRect(&rcClip, rc.left, rc.top, rc.left + 2, rc.bottom); // draw only the borders to avoid flickering
+		DrawThemeBackground(hTheme, hdc, LVP_LISTGROUP, 0, &rc, &rcClip); // draw themed left border
+		SetRect(&rcClip, rc.left, rc.top, rc.right, rc.top + 2);
+		DrawThemeBackground(hTheme, hdc, LVP_LISTGROUP, 0, &rc, &rcClip); // draw themed top border
+		SetRect(&rcClip, rc.right - 2, rc.top, rc.right, rc.bottom);
+		DrawThemeBackground(hTheme, hdc, LVP_LISTGROUP, 0, &rc, &rcClip); // draw themed right border
+		SetRect(&rcClip, rc.left, rc.bottom - 2, rc.right, rc.bottom);
+		DrawThemeBackground(hTheme, hdc, LVP_LISTGROUP, 0, &rc, &rcClip); // draw themed bottom border
+
+		CloseThemeData(hTheme);
+	}
+	ReleaseDC(hWnd, hdc);
+	return 0;
 }

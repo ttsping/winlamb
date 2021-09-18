@@ -27,6 +27,7 @@ public:
 private:
 	[[nodiscard]] static WORD NextCtrlId();
 	static LRESULT CALLBACK Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
+	static LRESULT PaintThemeBorders(HWND hWnd, WPARAM wp, LPARAM lp);
 };
 
 }
