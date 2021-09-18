@@ -4,7 +4,7 @@
 using namespace core;
 using std::system_error;
 
-ImageList::ImageList(SIZE resolution, DWORD flags, UINT initialSize)
+ImageList::ImageList(SIZE resolution, UINT initialSize, DWORD flags)
 	: sz{resolution}
 {
 	if (!(this->hil = ImageList_Create(resolution.cx, resolution.cy, flags, initialSize, 1))) {

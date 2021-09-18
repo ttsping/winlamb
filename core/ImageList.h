@@ -14,7 +14,7 @@ private:
 public:
 	~ImageList() { this->destroy(); }
 
-	ImageList(SIZE resolution, DWORD flags = ILC_COLOR32, UINT initialSize = 1);
+	ImageList(SIZE resolution, UINT initialSize = 1, DWORD flags = ILC_COLOR32);
 	ImageList(ImageList&& other) noexcept { this->operator=(std::move(other)); }
 	ImageList& operator=(ImageList&& other) noexcept;
 
