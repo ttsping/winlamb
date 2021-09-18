@@ -127,11 +127,11 @@ void File::eraseAndWrite(span<const BYTE> bytes) const
 }
 
 File::Lock::Lock(const File& file, UINT64 offset, UINT64 numBytes)
-	: file{file}, offsetL{offset}, numBytesL{numBytes}
+	: file{file}, off{offset}, sz{numBytes}
 {
 	if (!LockFile(this->file.handle(),
-		core_internals::Lo64(this->offsetL), core_internals::Hi64(this->offsetL),
-		core_internals::Lo64(this->numBytesL), core_internals::Hi64(this->numBytesL)))
+		core_internals::Lo64(this->off), core_internals::Hi64(this->off),
+		core_internals::Lo64(this->sz), core_internals::Hi64(this->sz)))
 	{
 		throw system_error(GetLastError(), std::system_category(), "LockFile failed");
 	}
@@ -140,6 +140,6 @@ File::Lock::Lock(const File& file, UINT64 offset, UINT64 numBytes)
 void File::Lock::unlock() const noexcept
 {
 	UnlockFile(this->file.handle(),
-		core_internals::Lo64(this->offsetL), core_internals::Hi64(this->offsetL),
-		core_internals::Lo64(this->numBytesL), core_internals::Hi64(this->numBytesL));
+		core_internals::Lo64(this->off), core_internals::Hi64(this->off),
+		core_internals::Lo64(this->sz), core_internals::Hi64(this->sz));
 }

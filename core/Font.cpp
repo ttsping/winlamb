@@ -30,7 +30,9 @@ void Font::create(const LOGFONT& lf)
 
 void Font::getObject(LOGFONT& lf) const
 {
-	GetObjectW(this->hf, sizeof(LOGFONT), &lf);
+	if (!GetObjectW(this->hf, sizeof(LOGFONT), &lf)) {
+		throw system_error(GetLastError(), std::system_category(), "GetObjectW failed");
+	}
 }
 
 const Font& Font::UiFont()

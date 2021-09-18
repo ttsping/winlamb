@@ -15,13 +15,13 @@ public:
 		friend File;
 	private:
 		const File& file;
-		UINT64 offsetL, numBytesL;
+		UINT64 off, sz;
 		Lock(const File& file, UINT64 offset, UINT64 numBytes);
 	public:
 		~Lock() { this->unlock(); }
 		void unlock() const noexcept;
-		[[nodiscard]] constexpr UINT64 offset() const { return this->offsetL; }
-		[[nodiscard]] constexpr UINT64 numBytes() const { return this->numBytesL; }
+		[[nodiscard]] constexpr UINT64 offset() const { return this->off; }
+		[[nodiscard]] constexpr UINT64 numBytes() const { return this->sz; }
 	};
 
 private:
