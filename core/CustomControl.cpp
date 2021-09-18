@@ -1,4 +1,5 @@
 
+#include <optional>
 #include <system_error>
 #include "CustomControl.h"
 #include "internals.h"
@@ -6,6 +7,7 @@
 #include <Uxtheme.h>
 #pragma comment(lib, "UxTheme.lib")
 using namespace core;
+using std::optional;
 using std::system_error;
 
 void CustomControl::create(Window* parent, int x, int y, int cx, int cy)
@@ -74,15 +76,22 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		return CustomControl::PaintThemeBorders(hWnd, wp, lp);
 	}
 
+	optional<LRESULT> maybeRet;
+
 	if (pObj) {
 		try {
-			return pObj->windowProc(msg, wp, lp);
+			maybeRet = pObj->windowProc(msg, wp, lp);
 		} catch (...) {
 			PostQuitMessage(core_internals::Lippincott());
 		}
+
+		if (msg == WM_NCDESTROY) {
+			pObj->hw = nullptr;
+			SetWindowLongPtrW(hWnd, GWLP_USERDATA, 0);
+		}
 	}
 
-	return DefWindowProcW(hWnd, msg, wp, lp);
+	return maybeRet ? maybeRet.value() : DefWindowProcW(hWnd, msg, wp, lp);
 }
 
 LRESULT CustomControl::PaintThemeBorders(HWND hWnd, WPARAM wp, LPARAM lp)

@@ -1,4 +1,5 @@
 
+#include <optional>
 #include "Dialog.h"
 #include "Font.h"
 #include "internals.h"
@@ -20,13 +21,20 @@ INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 		pObj = (Dialog*)GetWindowLongPtrW(hDlg, DWLP_USER);
 	}
 
+	optional<INT_PTR> maybeRet;
+
 	if (pObj) {
 		try {
-			return pObj->dialogProc(msg, wp, lp);
+			maybeRet = pObj->dialogProc(msg, wp, lp);
 		} catch (...) {
 			PostQuitMessage(core_internals::Lippincott());
 		}
+
+		if (msg == WM_NCDESTROY) {
+			pObj->hw = nullptr;
+			SetWindowLongPtrW(hWnd, DWLP_USER, 0);
+		}
 	}
 
-	return FALSE;
+	return maybeRet ? maybeRet.value() : FALSE;
 }
