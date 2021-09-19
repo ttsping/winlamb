@@ -21,6 +21,10 @@ INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 		pObj = (Dialog*)GetWindowLongPtrW(hDlg, DWLP_USER);
 	}
 
+	if (msg == core_internals::WM_UI_THREAD) { // will never be handled by the user
+		return this->processUiThreadMsg(lp);
+	}
+
 	optional<INT_PTR> maybeRet;
 
 	if (pObj) {

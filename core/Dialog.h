@@ -1,6 +1,6 @@
 
 #pragma once
-#include "Window.h"
+#include "WindowThread.h"
 
 namespace core {
 
@@ -8,7 +8,7 @@ class MainDialog;
 class ModalDialog;
 
 // Keeps the dialog procedure. Base to all dialog-based windows.
-class Dialog : public Window {
+class Dialog : public WindowThread {
 	friend core::MainDialog;
 	friend core::ModalDialog;
 

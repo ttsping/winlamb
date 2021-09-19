@@ -1,10 +1,10 @@
 
 #pragma once
-#include "Window.h"
+#include "WindowThread.h"
 
 namespace core {
 
-class CustomControl : public Window {
+class CustomControl : public WindowThread {
 private:
 	DWORD classStyles;
 	HCURSOR hCursor;
