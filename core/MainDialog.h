@@ -34,8 +34,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ 
 		wndClass window; \
 		ret = window.run(hInst, cmdShow); \
 	} catch (...) { \
-		core_internals::Lippincott(); \
-		ret = -1; \
+		ret = core_internals::Lippincott(); \
 	} \
 	return ret; \
 }

@@ -1,5 +1,6 @@
 
 #pragma once
+#include <optional>
 #include <string>
 #include <string_view>
 #include <Windows.h>
@@ -10,8 +11,14 @@ void Dbg(std::wstring_view format, ...);
 [[nodiscard]] bool EndsWith(std::wstring_view s, std::wstring_view ending);
 [[nodiscard]] bool EndsWithI(std::wstring_view s, std::wstring_view ending);
 [[nodiscard]] bool EqI(std::wstring_view s1, std::wstring_view s2);
+[[nodiscard]] std::optional<UINT64> FindSubstr(std::wstring_view haystack, std::wstring_view needle, UINT64 offset = 0);
+[[nodiscard]] std::optional<UINT64> FindSubstrI(std::wstring_view haystack, std::wstring_view needle, UINT64 offset = 0);
+[[nodiscard]] std::optional<UINT64> FindSubstrRev(std::wstring_view haystack, std::wstring_view needle, UINT64 offset = 0);
+[[nodiscard]] std::optional<UINT64> FindSubstrRevI(std::wstring_view haystack, std::wstring_view needle, UINT64 offset = 0);
 [[nodiscard]] std::wstring Format(std::wstring_view format, ...);
 std::wstring& RemoveDiacritics(std::wstring& s);
+std::wstring& Replace(std::wstring& haystack, std::wstring_view needle, std::wstring_view replacement);
+std::wstring& ReplaceI(std::wstring& haystack, std::wstring_view needle, std::wstring_view replacement);
 std::wstring& Reverse(std::wstring& s);
 [[nodiscard]] bool StartsWith(std::wstring_view s, std::wstring_view start);
 [[nodiscard]] bool StartsWithI(std::wstring_view s, std::wstring_view start);

@@ -2,6 +2,7 @@
 #include <cwctype>
 #include "str.h"
 using namespace core;
+using std::optional;
 using std::wstring;
 using std::wstring_view;
 
@@ -48,7 +49,35 @@ bool str::EndsWithI(std::wstring_view s, std::wstring_view ending)
 
 bool str::EqI(std::wstring_view s1, std::wstring_view s2)
 {
-	return lstrcmpiW(s1.data(), s2.data());
+	return !lstrcmpiW(s1.data(), s2.data());
+}
+
+optional<UINT64> str::FindSubstr(wstring_view haystack, wstring_view needle, UINT64 offset)
+{
+	size_t index = haystack.find(needle, offset);
+	return index == wstring::npos ? std::nullopt : optional{index};
+}
+
+optional<UINT64> str::FindSubstrI(wstring_view haystack, wstring_view needle, UINT64 offset)
+{
+	wstring haystack2 = str::ToUpper(haystack);
+	wstring needle2 = str::ToUpper(needle);
+	size_t index = haystack2.find(needle2, offset);
+	return index == wstring::npos ? std::nullopt : optional{index};
+}
+
+optional<UINT64> str::FindSubstrRev(wstring_view haystack, wstring_view needle, UINT64 offset)
+{
+	size_t index = haystack.rfind(needle, offset);
+	return index == wstring::npos ? std::nullopt : optional{index};
+}
+
+optional<UINT64> str::FindSubstrRevI(wstring_view haystack, wstring_view needle, UINT64 offset)
+{
+	wstring haystack2 = str::ToUpper(haystack);
+	wstring needle2 = str::ToUpper(needle);
+	size_t index = haystack2.rfind(needle2, offset);
+	return index == wstring::npos ? std::nullopt : optional{index};
 }
 
 wstring str::Format(wstring_view format, ...)
@@ -76,6 +105,55 @@ wstring& str::RemoveDiacritics(wstring& s)
 		}
 	}
 	return s;
+}
+
+wstring& str::Replace(wstring& haystack, wstring_view needle, wstring_view replacement)
+{
+	if (haystack.empty() || needle.empty()) return haystack;
+
+	wstring output(haystack.length(), L'\0'); // prealloc
+	size_t base = 0;
+	size_t found = 0;
+
+	for (;;) {
+		found = haystack.find(needle, found);
+		output.insert(output.length(), haystack, base, found - base);
+		if (found != wstring::npos) {
+			output.append(replacement);
+			base = found = found + needle.length();
+		} else {
+			break;
+		}
+	}
+
+	haystack.swap(output); // behaves like an in-place operation
+	return haystack;
+}
+
+wstring& str::ReplaceI(wstring& haystack, wstring_view needle, wstring_view replacement)
+{
+	if (haystack.empty() || needle.empty()) return haystack;
+
+	wstring haystackU = str::ToUpper(haystack);
+	wstring needleU = str::ToUpper(needle);
+
+	wstring output(haystack.length(), L'\0'); // prealloc
+	size_t base = 0;
+	size_t found = 0;
+
+	for (;;) {
+		found = haystackU.find(needleU, found);
+		output.insert(output.length(), haystack, base, found - base);
+		if (found != std::wstring::npos) {
+			output.append(replacement);
+			base = found = found + needle.length();
+		} else {
+			break;
+		}
+	}
+
+	haystack.swap(output); // behaves like an in-place operation
+	return haystack;
 }
 
 wstring& str::Reverse(wstring& s)
@@ -152,8 +230,6 @@ wstring& str::TrimNulls(wstring& s)
 	// When a wstring is initialized with any length, possibly to be used as a buffer,
 	// the string length may not match the size() method, after the operation.
 	// This function fixes this.
-	if (!s.empty()) {
-		s.resize(lstrlenW(s.c_str()));
-	}
+	if (!s.empty()) s.resize(lstrlenW(s.c_str()));
 	return s;
 }
