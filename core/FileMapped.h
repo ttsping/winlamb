@@ -13,7 +13,7 @@ private:
 	File file;
 	HANDLE hMap = nullptr;
 	void* pMem = nullptr;
-	UINT64 sz = 0;
+	size_t sz = 0;
 	bool readOnly = false;
 
 public:
@@ -28,11 +28,11 @@ public:
 
 	void close() noexcept;
 	void open(std::wstring_view filePath, Access access);
-	[[nodiscard]] constexpr UINT64 size() const { return this->sz; }
-	void resize(UINT64 newSize);
+	[[nodiscard]] constexpr size_t size() const { return this->sz; }
+	void resize(size_t newSize);
 	[[nodiscard]] constexpr std::span<const BYTE> hotSpan() const { return std::span{(const BYTE*)this->pMem, this->sz}; }
 	[[nodiscard]] constexpr std::span<BYTE> hotSpan() { return std::span{(BYTE*)this->pMem, this->sz}; }
-	[[nodiscard]] std::vector<BYTE> readChunk(UINT64 offset, UINT64 numBytes) const;
+	[[nodiscard]] std::vector<BYTE> readChunk(size_t offset, size_t numBytes) const;
 	[[nodiscard]] std::vector<BYTE> readAll() const { return this->readChunk(0, this->sz); }
 
 private:

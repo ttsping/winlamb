@@ -6,6 +6,7 @@ using namespace core;
 using std::invalid_argument;
 using std::optional;
 using std::span;
+using std::vector;
 using std::wstring;
 using std::wstring_view;
 
@@ -55,13 +56,13 @@ bool str::EqI(std::wstring_view s1, std::wstring_view s2)
 	return !lstrcmpiW(s1.data(), s2.data());
 }
 
-optional<UINT64> str::FindSubstr(wstring_view haystack, wstring_view needle, UINT64 offset)
+optional<size_t> str::FindSubstr(wstring_view haystack, wstring_view needle, size_t offset)
 {
 	size_t index = haystack.find(needle, offset);
 	return index == wstring::npos ? std::nullopt : optional{index};
 }
 
-optional<UINT64> str::FindSubstrI(wstring_view haystack, wstring_view needle, UINT64 offset)
+optional<size_t> str::FindSubstrI(wstring_view haystack, wstring_view needle, size_t offset)
 {
 	wstring haystack2 = str::ToUpper(haystack);
 	wstring needle2 = str::ToUpper(needle);
@@ -69,13 +70,13 @@ optional<UINT64> str::FindSubstrI(wstring_view haystack, wstring_view needle, UI
 	return index == wstring::npos ? std::nullopt : optional{index};
 }
 
-optional<UINT64> str::FindSubstrRev(wstring_view haystack, wstring_view needle, UINT64 offset)
+optional<size_t> str::FindSubstrRev(wstring_view haystack, wstring_view needle, size_t offset)
 {
 	size_t index = haystack.rfind(needle, offset);
 	return index == wstring::npos ? std::nullopt : optional{index};
 }
 
-optional<UINT64> str::FindSubstrRevI(wstring_view haystack, wstring_view needle, UINT64 offset)
+optional<size_t> str::FindSubstrRevI(wstring_view haystack, wstring_view needle, size_t offset)
 {
 	wstring haystack2 = str::ToUpper(haystack);
 	wstring needle2 = str::ToUpper(needle);
@@ -230,6 +231,42 @@ wstring& str::Reverse(wstring& s)
 		std::swap(s[i], s[s.length() - i - 1]);
 	}
 	return s;
+}
+
+vector<wstring> str::Split(wstring_view s, wstring_view delimiter, optional<size_t> maxPieces, bool keepBlanks)
+{
+	vector<wstring> ret;
+	size_t beginIdx = 0, curIdx = 0;
+
+	for (;;) {
+		if (optional<size_t> found = str::FindSubstr(s, delimiter, beginIdx); found) {
+			curIdx = *found;
+		} else {
+			curIdx = s.length();
+		}
+
+		if (maxPieces && ret.size() + 1 == *maxPieces) {
+			curIdx = s.length();
+			if (keepBlanks || curIdx - beginIdx) ret.emplace_back(s, beginIdx, curIdx - beginIdx);
+			break;
+		}
+
+		if (keepBlanks || curIdx - beginIdx) ret.emplace_back(s, beginIdx, curIdx - beginIdx);
+
+		curIdx += delimiter.length();
+		beginIdx = curIdx;
+		if (curIdx >= s.length()) break;
+	}
+
+	return ret;
+}
+
+vector<wstring> str::SplitLines(wstring_view s)
+{
+	if (optional<const wchar_t*> lineBreak = str::GetLineBreak(s); lineBreak) {
+		return str::Split(s, *lineBreak, std::nullopt, true);
+	}
+	return {wstring{s}}; // a single line
 }
 
 bool str::StartsWith(wstring_view s, wstring_view start)

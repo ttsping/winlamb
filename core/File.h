@@ -15,13 +15,13 @@ public:
 		friend File;
 	private:
 		const File& file;
-		UINT64 off, sz;
-		Lock(const File& file, UINT64 offset, UINT64 numBytes);
+		size_t off, sz;
+		Lock(const File& file, size_t offset, size_t numBytes);
 	public:
 		~Lock() { this->unlock(); }
 		void unlock() noexcept;
-		[[nodiscard]] constexpr UINT64 offset() const { return this->off; }
-		[[nodiscard]] constexpr UINT64 numBytes() const { return this->sz; }
+		[[nodiscard]] constexpr size_t offset() const { return this->off; }
+		[[nodiscard]] constexpr size_t numBytes() const { return this->sz; }
 	};
 
 private:
@@ -39,12 +39,12 @@ public:
 
 	void close() noexcept;
 	void open(std::wstring_view filePath, Access access);
-	[[nodiscard]] Lock lock(UINT64 offset, UINT64 numBytes) const { return Lock(*this, offset, numBytes); }
+	[[nodiscard]] Lock lock(size_t offset, size_t numBytes) const { return Lock(*this, offset, numBytes); }
 	[[nodiscard]] constexpr HANDLE handle() const { return this->hf; }
 	[[nodiscard]] INT64 offsetPtr() const;
 	void offsetPtrRewind() const;
-	[[nodiscard]] UINT64 size() const;
-	void resize(UINT64 newSize) const;
+	[[nodiscard]] size_t size() const;
+	void resize(size_t newSize) const;
 	[[nodiscard]] std::vector<BYTE> readAll() const;
 	void write(std::span<const BYTE> bytes) const;
 	void eraseAndWrite(std::span<const BYTE> bytes) const;

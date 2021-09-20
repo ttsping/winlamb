@@ -70,16 +70,16 @@ void File::offsetPtrRewind() const
 	}
 }
 
-UINT64 File::size() const
+size_t File::size() const
 {
 	LARGE_INTEGER li = {0};
 	if (!GetFileSizeEx(this->hf, &li)) {
 		throw system_error(GetLastError(), std::system_category(), "GetFileSizeEx failed");
 	}
-	return (UINT64)li.QuadPart;
+	return (size_t)li.QuadPart;
 }
 
-void File::resize(UINT64 newSize) const
+void File::resize(size_t newSize) const
 {
 	LARGE_INTEGER li = {0};
 	li.QuadPart = newSize;
@@ -100,7 +100,7 @@ void File::resize(UINT64 newSize) const
 vector<BYTE> File::readAll() const
 {
 	this->offsetPtrRewind();
-	UINT64 len = this->size();
+	size_t len = this->size();
 	vector<BYTE> buf(len, 0x00); // alloc buffer
 	DWORD numRead = 0;
 
@@ -126,7 +126,7 @@ void File::eraseAndWrite(span<const BYTE> bytes) const
 	this->offsetPtrRewind();
 }
 
-File::Lock::Lock(const File& file, UINT64 offset, UINT64 numBytes)
+File::Lock::Lock(const File& file, size_t offset, size_t numBytes)
 	: file{file}, off{offset}, sz{numBytes}
 {
 	if (!LockFile(this->file.handle(),

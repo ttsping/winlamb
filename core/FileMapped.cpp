@@ -41,7 +41,7 @@ void FileMapped::open(wstring_view filePath, Access access)
 	this->mapInMemory();
 }
 
-void FileMapped::resize(UINT64 newSize)
+void FileMapped::resize(size_t newSize)
 {
 	UnmapViewOfFile(this->pMem);
 	CloseHandle(this->hMap);
@@ -67,7 +67,7 @@ void FileMapped::mapInMemory()
 	this->sz = this->file.size(); // cache file size
 }
 
-vector<BYTE> FileMapped::readChunk(UINT64 offset, UINT64 numBytes) const
+vector<BYTE> FileMapped::readChunk(size_t offset, size_t numBytes) const
 {
 	span<const BYTE> slice = this->hotSpan();
 	vector<BYTE> buf(slice.size(), 0x00); // alloc buffer
