@@ -19,7 +19,7 @@ public:
 	virtual ~Window() { }
 
 	Window() = default;
-	explicit Window(HWND hWnd) : hw{hWnd} { }
+	explicit constexpr Window(HWND hWnd) : hw{hWnd} { }
 
 	[[nodiscard]] constexpr HWND hWnd() const { return this->hw; }
 };

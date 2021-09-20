@@ -18,7 +18,7 @@ private:
 public:
 	virtual ~Dialog() { }
 
-	Dialog(int dialogId) : dialogId{dialogId} { }
+	constexpr Dialog(int dialogId) : dialogId{dialogId} { }
 	virtual INT_PTR dialogProc(UINT msg, WPARAM wp, LPARAM lp) = 0;
 
 private:

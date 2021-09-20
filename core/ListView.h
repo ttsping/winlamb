@@ -15,7 +15,7 @@ public:
 		friend ListView;
 	private:
 		ListView& lv;
-		Columns(ListView& lv) : lv{lv} { }
+		constexpr Columns(ListView& lv) : lv{lv} { }
 	public:
 		[[nodiscard]] UINT count() const;
 		const Columns& add(std::wstring_view text, int size) const;
@@ -28,7 +28,7 @@ public:
 		friend ListView;
 	private:
 		ListView& lv;
-		Items(ListView& lv) : lv{lv} { }
+		constexpr Items(ListView& lv) : lv{lv} { }
 	public:
 		[[nodiscard]] UINT count() const;
 		UINT add(int iconIdx, std::initializer_list<std::wstring_view> texts) const;
@@ -38,7 +38,7 @@ public:
 	Columns columns{*this};
 	Items items{*this};
 
-	explicit ListView(HWND hCtrl) : NativeControl{hCtrl} { }
+	explicit constexpr ListView(HWND hCtrl) : NativeControl{hCtrl} { }
 	ListView(HWND hDlg, int ctrlId) : NativeControl{GetDlgItem(hDlg, ctrlId)} { }
 
 	void setExtendedStyle(bool set, DWORD exStyle) const;

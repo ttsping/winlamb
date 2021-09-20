@@ -14,7 +14,7 @@ private:
 public:
 	virtual ~MainDialog() { }
 
-	MainDialog(int dialogId, int iconId, int accelId)
+	constexpr MainDialog(int dialogId, int iconId, int accelId)
 		: Dialog{dialogId}, iconId{iconId}, accelId{accelId} { }
 
 	virtual int run(HINSTANCE hInst, int cmdShow);
