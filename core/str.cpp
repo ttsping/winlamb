@@ -233,6 +233,24 @@ wstring& str::Reverse(wstring& s)
 	return s;
 }
 
+vector<BYTE> str::SerializeToUtf8(wstring_view s, bool writeBom)
+{
+	if (s.empty()) return {};
+
+	BYTE utf8Bom[] = {0xef, 0xbb, 0xbf};
+	size_t szBom = writeBom ? ARRAYSIZE(utf8Bom) : 0;
+
+	size_t neededLen = WideCharToMultiByte(CP_UTF8, 0, s.data(),
+		(int)s.length(), nullptr, 0, nullptr, 0);
+
+	vector<BYTE> ret(neededLen + szBom, 0x00);
+	if (writeBom) memcpy(&ret[0], utf8Bom, szBom);
+	
+	WideCharToMultiByte(CP_UTF8, 0, s.data(), (int)s.length(),
+		(char*)&ret[0 + szBom], (int)neededLen, nullptr, nullptr);
+	return ret;
+}
+
 vector<wstring> str::Split(wstring_view s, wstring_view delimiter, optional<size_t> maxPieces, bool keepBlanks)
 {
 	vector<wstring> ret;

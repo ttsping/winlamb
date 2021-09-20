@@ -24,6 +24,7 @@ std::wstring& RemoveDiacritics(std::wstring& s);
 std::wstring& Replace(std::wstring& haystack, std::wstring_view needle, std::wstring_view replacement);
 std::wstring& ReplaceI(std::wstring& haystack, std::wstring_view needle, std::wstring_view replacement);
 std::wstring& Reverse(std::wstring& s);
+[[nodiscard]] std::vector<BYTE> SerializeToUtf8(std::wstring_view s, bool writeBom = false);
 [[nodiscard]] std::vector<std::wstring> Split(std::wstring_view s, std::wstring_view delimiter, std::optional<size_t> maxPieces = std::nullopt, bool keepBlanks = false);
 [[nodiscard]] std::vector<std::wstring> SplitLines(std::wstring_view s);
 [[nodiscard]] bool StartsWith(std::wstring_view s, std::wstring_view start);
