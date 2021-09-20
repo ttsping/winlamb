@@ -17,7 +17,9 @@ public:
 	virtual ~WindowThread() { }
 	WindowThread() = default;
 
-protected:
+	// Runs code asynchronously in a new detached thread.
+	void runDetachedThread(std::function<void()> func) const;
+
 	// This method is analog to SendMessage (synchronous), but intended to be
 	// called from another thread, so a callback function can, tunelled by
 	// wndproc, run in the original thread of the window, thus allowing GUI
@@ -25,7 +27,7 @@ protected:
 	void runUiThread(std::function<void()> func) const;
 
 private:
-	void processUiThreadMsg(LPARAM lp) const;
+	[[nodiscard]] bool processUiThreadMsg(UINT msg, LPARAM lp) const;
 };
 
 }

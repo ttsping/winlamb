@@ -25,10 +25,7 @@ INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 	optional<INT_PTR> maybeRet;
 
 	if (pObj) {
-		if (msg == core_internals::WM_UI_THREAD) { // will never be handled by the user
-			pObj->processUiThreadMsg(lp);
-			return TRUE;
-		}
+		if (pObj->processUiThreadMsg(msg, lp)) return TRUE;
 
 		try {
 			maybeRet = pObj->dialogProc(msg, wp, lp);

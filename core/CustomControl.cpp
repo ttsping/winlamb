@@ -72,17 +72,12 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		pObj = (CustomControl*)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
 	}
 
-	if (msg == WM_NCPAINT) { // will never be handled by the user
-		return CustomControl::PaintThemeBorders(hWnd, wp, lp);
-	}
+	if (CustomControl::PaintThemeBorders(hWnd, msg, wp, lp)) return 0;
 
 	optional<LRESULT> maybeRet;
 
 	if (pObj) {
-		if (msg == core_internals::WM_UI_THREAD) { // will never be handled by the user
-			pObj->processUiThreadMsg(lp);
-			return 0;
-		}
+		if (pObj->processUiThreadMsg(msg, lp)) return 0;
 
 		try {
 			maybeRet = pObj->windowProc(msg, wp, lp);
@@ -99,8 +94,10 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	return maybeRet ? maybeRet.value() : DefWindowProcW(hWnd, msg, wp, lp);
 }
 
-LRESULT CustomControl::PaintThemeBorders(HWND hWnd, WPARAM wp, LPARAM lp)
+bool CustomControl::PaintThemeBorders(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
+	if (msg != WM_NCPAINT) return false;
+
 	DefWindowProcW(hWnd, WM_NCPAINT, wp, lp); // make system draw the scrollbar for us
 
 	if (!(GetWindowLongPtrW(hWnd, GWL_EXSTYLE) & WS_EX_CLIENTEDGE) ||
@@ -128,5 +125,6 @@ LRESULT CustomControl::PaintThemeBorders(HWND hWnd, WPARAM wp, LPARAM lp)
 		CloseThemeData(hTheme);
 	}
 	ReleaseDC(hWnd, hdc);
-	return 0;
+
+	return true;
 }

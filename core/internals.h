@@ -4,8 +4,6 @@
 
 namespace core_internals {
 
-const UINT WM_UI_THREAD = WM_APP + 0x3fff;
-
 // Centralizes all exception handling, displaying the error with MessageBox().
 int Lippincott() noexcept;
 
