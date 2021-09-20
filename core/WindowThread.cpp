@@ -1,13 +1,14 @@
 
 #include "WindowThread.h"
 #include "internals.h"
+using namespace core;
 using std::exception_ptr;
 using std::function;
 
 struct CallbackPack {
-	function<void> func;
+	function<void()> func;
 	exception_ptr curExcept = nullptr;
-}
+};
 
 void WindowThread::runUiThread(function<void()> func) const
 {

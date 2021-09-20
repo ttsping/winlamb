@@ -4,6 +4,7 @@
 #include "Font.h"
 #include "internals.h"
 using namespace core;
+using std::optional;
 
 INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -21,13 +22,14 @@ INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 		pObj = (Dialog*)GetWindowLongPtrW(hDlg, DWLP_USER);
 	}
 
-	if (msg == core_internals::WM_UI_THREAD) { // will never be handled by the user
-		return this->processUiThreadMsg(lp);
-	}
-
 	optional<INT_PTR> maybeRet;
 
 	if (pObj) {
+		if (msg == core_internals::WM_UI_THREAD) { // will never be handled by the user
+			pObj->processUiThreadMsg(lp);
+			return TRUE;
+		}
+
 		try {
 			maybeRet = pObj->dialogProc(msg, wp, lp);
 		} catch (...) {
@@ -36,7 +38,7 @@ INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 		if (msg == WM_NCDESTROY) {
 			pObj->hw = nullptr;
-			SetWindowLongPtrW(hWnd, DWLP_USER, 0);
+			SetWindowLongPtrW(hDlg, DWLP_USER, 0);
 		}
 	}
 

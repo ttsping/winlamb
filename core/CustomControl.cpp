@@ -72,15 +72,18 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		pObj = (CustomControl*)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
 	}
 
-	if (msg == core_internals::WM_UI_THREAD) { // will never be handled by the user
-		return this->processUiThreadMsg(lp);
-	} else if (msg == WM_NCPAINT) {
+	if (msg == WM_NCPAINT) { // will never be handled by the user
 		return CustomControl::PaintThemeBorders(hWnd, wp, lp);
 	}
 
 	optional<LRESULT> maybeRet;
 
 	if (pObj) {
+		if (msg == core_internals::WM_UI_THREAD) { // will never be handled by the user
+			pObj->processUiThreadMsg(lp);
+			return 0;
+		}
+
 		try {
 			maybeRet = pObj->windowProc(msg, wp, lp);
 		} catch (...) {
