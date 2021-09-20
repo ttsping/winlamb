@@ -25,7 +25,7 @@ INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 	optional<INT_PTR> maybeRet;
 
 	if (pObj) {
-		if (pObj->processUiThreadMsg(msg, lp)) return TRUE;
+		if (pObj->processUiThreadMsg(msg, wp, lp)) return TRUE;
 
 		try {
 			maybeRet = pObj->dialogProc(msg, wp, lp);

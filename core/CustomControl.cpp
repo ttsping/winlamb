@@ -77,7 +77,7 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	optional<LRESULT> maybeRet;
 
 	if (pObj) {
-		if (pObj->processUiThreadMsg(msg, lp)) return 0;
+		if (pObj->processUiThreadMsg(msg, wp, lp)) return 0;
 
 		try {
 			maybeRet = pObj->windowProc(msg, wp, lp);

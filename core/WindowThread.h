@@ -27,7 +27,7 @@ public:
 	void runUiThread(std::function<void()> func) const;
 
 private:
-	[[nodiscard]] bool processUiThreadMsg(UINT msg, LPARAM lp) const;
+	[[nodiscard]] bool processUiThreadMsg(UINT msg, WPARAM wp, LPARAM lp) const;
 };
 
 }

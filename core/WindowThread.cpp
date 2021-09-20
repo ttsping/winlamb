@@ -13,12 +13,13 @@ struct ThreadPack {
 	exception_ptr curExcept = nullptr;
 };
 
+// Message code to be used for thread operations. Supposed to never be used externally.
 static const UINT WM_UI_THREAD = WM_APP + 0x3fff;
 
 void WindowThread::runUiThread(function<void()> func) const
 {
 	ThreadPack* pPack = new ThreadPack{std::move(func)};
-	SendMessageW(this->hWnd(), WM_UI_THREAD, 0, (LPARAM)pPack);
+	SendMessageW(this->hWnd(), WM_UI_THREAD, 0xdead'beef, (LPARAM)pPack);
 }
 
 void WindowThread::runDetachedThread(function<void()> func) const
@@ -33,7 +34,7 @@ void WindowThread::runDetachedThread(function<void()> func) const
 			pPack->func();
 		} catch (...) {
 			ThreadPack* pPackCrash = new ThreadPack{[]{}, pPack->hWnd, std::current_exception()};
-			SendMessageW(pPack->hWnd, WM_UI_THREAD, 0, (LPARAM)pPackCrash);
+			SendMessageW(pPack->hWnd, WM_UI_THREAD, 0xdead'beef, (LPARAM)pPackCrash);
 		}
 		delete pPack;
 		_endthreadex(0); // http://www.codeproject.com/Articles/7732/A-class-to-synchronise-thread-completions/
@@ -43,9 +44,9 @@ void WindowThread::runDetachedThread(function<void()> func) const
 	if (hThread) CloseHandle(hThread);
 }
 
-bool WindowThread::processUiThreadMsg(UINT msg, LPARAM lp) const
+bool WindowThread::processUiThreadMsg(UINT msg, WPARAM wp, LPARAM lp) const
 {
-	if (msg != WM_UI_THREAD) return false;
+	if (msg != WM_UI_THREAD || wp != 0xdead'beef) return false;
 
 	ThreadPack* pPack = (ThreadPack*)lp;
 	try {
