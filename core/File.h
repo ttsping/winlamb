@@ -19,7 +19,7 @@ public:
 		Lock(const File& file, UINT64 offset, UINT64 numBytes);
 	public:
 		~Lock() { this->unlock(); }
-		void unlock() const noexcept;
+		void unlock() noexcept;
 		[[nodiscard]] constexpr UINT64 offset() const { return this->off; }
 		[[nodiscard]] constexpr UINT64 numBytes() const { return this->sz; }
 	};

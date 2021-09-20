@@ -137,9 +137,12 @@ File::Lock::Lock(const File& file, UINT64 offset, UINT64 numBytes)
 	}
 }
 
-void File::Lock::unlock() const noexcept
+void File::Lock::unlock() noexcept
 {
-	UnlockFile(this->file.handle(),
-		core_internals::Lo64(this->off), core_internals::Hi64(this->off),
-		core_internals::Lo64(this->sz), core_internals::Hi64(this->sz));
+	if (this->off && this->sz) {
+		UnlockFile(this->file.handle(),
+			core_internals::Lo64(this->off), core_internals::Hi64(this->off),
+			core_internals::Lo64(this->sz), core_internals::Hi64(this->sz));
+		this->off = this->sz = 0;
+	}
 }
