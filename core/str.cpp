@@ -1,19 +1,15 @@
 
 #include <cwctype>
+#include <stdexcept>
 #include "str.h"
 using namespace core;
+using std::invalid_argument;
 using std::optional;
+using std::span;
 using std::wstring;
 using std::wstring_view;
 
-[[nodiscard]] static bool _EndsStartsFirstCheck(wstring_view s, wstring_view ending)
-{
-	if (s.empty()) return false;
-	if (!ending.length() || ending.length() > s.length()) return false;
-	return true;
-}
-
-static wstring _Format(wstring_view format, va_list args)
+[[nodiscard]] static wstring _Format(wstring_view format, va_list args)
 {
 	size_t len = vswprintf(nullptr, 0, format.data(), args);
 	wstring ret(len + 1, L'\0'); // room for terminating null
@@ -31,6 +27,13 @@ void str::Dbg(wstring_view format, ...)
 
 	va_end(args);
 	OutputDebugStringW(s.c_str());
+}
+
+[[nodiscard]] static bool _EndsStartsFirstCheck(wstring_view s, wstring_view ending)
+{
+	if (s.empty()) return false;
+	if (!ending.length() || ending.length() > s.length()) return false;
+	return true;
 }
 
 bool str::EndsWith(std::wstring_view s, std::wstring_view ending)
@@ -89,6 +92,70 @@ wstring str::Format(wstring_view format, ...)
 
 	va_end(args);
 	return ret;
+}
+
+optional<const wchar_t*> str::GetLineBreak(wstring_view s)
+{
+	for (size_t i = 0; i < s.length() - 1; ++i) {
+		if (s[i] == L'\r') {
+			return s[i + 1] == L'\n' ? optional{L"\r\n"} : optional{L"\r"};
+		} else if (s[i] == L'\n') {
+			return s[i + 1] == L'\r' ? optional{L"\n\r"} : optional{L"\n"};
+		}
+	}
+	return std::nullopt; // unknown
+}
+
+[[nodiscard]] static wstring _ParseAscii(span<const BYTE> src)
+{
+	if (src.empty()) return {};
+
+	wstring ret(src.size(), L'\0');
+	for (size_t i = 0; i < src.size(); ++i) {
+		if (!src[i]) { // found terminating null, stop processing here
+			ret.resize(i);
+			return ret;
+		}
+		ret[i] = static_cast<wchar_t>(src[i]); // raw conversion
+	}
+
+	str::TrimNulls(ret);
+	return ret; // data didn't have a terminating null
+}
+
+[[nodiscard]] static wstring _ParseCodePage(span<const BYTE> src, UINT codePage)
+{
+	if (src.empty()) return {};
+
+	wstring ret;
+	int neededLen = MultiByteToWideChar(codePage, 0, (LPCCH)src.data(), (int)src.size(), nullptr, 0);
+	ret.resize(neededLen);
+
+	MultiByteToWideChar(codePage, 0, (LPCCH)src.data(), (int)src.size(), &ret[0], neededLen);
+	str::TrimNulls(ret);
+	return ret;
+}
+
+wstring str::Parse(span<const BYTE> src)
+{
+	if (src.empty()) return {};
+
+	str::EncodingInfo encInfo = str::GetEncoding(src);
+	src = src.subspan(encInfo.bomSize); // skip BOM, if any
+
+	switch (encInfo.encType) {
+	case Encoding::UNKNOWN:
+	case Encoding::ASCII:   return _ParseAscii(src);
+	case Encoding::WIN1252: return _ParseCodePage(src, 1252);
+	case Encoding::UTF8:    return _ParseCodePage(src, CP_UTF8);
+	case Encoding::UTF16BE: throw invalid_argument("UTF-16 big endian: encoding not implemented.");
+	case Encoding::UTF16LE: throw invalid_argument("UTF-16 little endian: encoding not implemented.");
+	case Encoding::UTF32BE: throw invalid_argument("UTF-32 big endian: encoding not implemented.");
+	case Encoding::UTF32LE: throw invalid_argument("UTF-32 little endian: encoding not implemented.");
+	case Encoding::SCSU:    throw invalid_argument("Standard compression scheme for Unicode: encoding not implemented.");
+	case Encoding::BOCU1:   throw invalid_argument("Binary ordered compression for Unicode: encoding not implemented.");
+	default:                throw invalid_argument("Unknown encoding.");
+	}
 }
 
 wstring& str::RemoveDiacritics(wstring& s)
@@ -232,4 +299,50 @@ wstring& str::TrimNulls(wstring& s)
 	// This function fixes this.
 	if (!s.empty()) s.resize(lstrlenW(s.c_str()));
 	return s;
+}
+
+str::EncodingInfo str::GetEncoding(span<const BYTE> src)
+{
+	auto match = [&](span<const BYTE> bom) -> bool {
+		return (src.size() >= bom.size())
+			&& !memcmp(src.data(), bom.data(), bom.size_bytes());
+	};
+
+	// https://en.wikipedia.org/wiki/Byte_order_mark
+
+	BYTE utf8[] = {0xef, 0xbb, 0xbf};
+	if (match(utf8)) return {Encoding::UTF8, ARRAYSIZE(utf8)};
+
+	BYTE utf16be[] = {0xfe, 0xff};
+	if (match(utf16be)) return {Encoding::UTF16BE, ARRAYSIZE(utf16be)};
+
+	BYTE utf16le[] = {0xff, 0xfe};
+	if (match(utf16le)) return {Encoding::UTF16LE, ARRAYSIZE(utf16le)};
+
+	BYTE utf32be[] = {0x00, 0x00, 0xfe, 0xff};
+	if (match(utf32be)) return {Encoding::UTF32BE, ARRAYSIZE(utf32be)};
+
+	BYTE utf32le[] = {0xff, 0xfe, 0x00, 0x00};
+	if (match(utf32le)) return {Encoding::UTF32LE, ARRAYSIZE(utf32le)};
+
+	BYTE scsu[] = {0x0e, 0xfe, 0xff};
+	if (match(scsu)) return {Encoding::SCSU, ARRAYSIZE(scsu)};
+
+	BYTE bocu1[] = {0xfb, 0xee, 0x28};
+	if (match(bocu1)) return {Encoding::BOCU1, ARRAYSIZE(bocu1)};
+
+	// No BOM found, guess UTF-8 without BOM, or Windows-1252 (superset of ISO-8859-1).
+	bool canBeWin1252 = false;
+	for (size_t i = 0; i < src.size(); ++i) {
+		if (src[i] > 0x7f) { // 127
+			canBeWin1252 = true;
+			if (i <= src.size() - 2 && (
+				(src[i] == 0xc2 && (src[i + 1] >= 0xa1 && src[i + 1] <= 0xbf)) || // http://www.utf8-chartable.de
+				(src[i] == 0xc3 && (src[i + 1] >= 0x80 && src[i + 1] <= 0xbf))))
+			{
+				return {Encoding::UTF8, 0}; // UTF-8 without BOM
+			}
+		}
+	}
+	return {(canBeWin1252 ? Encoding::WIN1252 : Encoding::ASCII), 0};
 }

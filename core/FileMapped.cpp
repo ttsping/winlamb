@@ -63,6 +63,8 @@ void FileMapped::mapInMemory()
 	{
 		throw system_error(GetLastError(), std::system_category(), "MapViewOfFile failed");
 	}
+
+	this->sz = this->file.size(); // cache file size
 }
 
 vector<BYTE> FileMapped::readChunk(UINT64 offset, UINT64 numBytes) const
