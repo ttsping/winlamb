@@ -25,7 +25,7 @@ int core_internals::Lippincott() noexcept
 
 HIMAGELIST core_internals::ShellImageList(int shil)
 {
-	// Implemented here because commoncontrols.h defines an ImageList type.
+	// Implemented here because commoncontrols.h defines its own ImageList type.
 
 	HIMAGELIST hil = nullptr;
 	if (HRESULT hr = SHGetImageList(shil, IID_IImageList, (void**)(&hil)); FAILED(hr)) {

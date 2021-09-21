@@ -24,8 +24,8 @@ public:
 	[[nodiscard]] HIMAGELIST leak();
 	[[nodiscard]] size_t count() const;
 	[[nodiscard]] SIZE resolution() const;
-	void loadIconResource(int iconIdx) const;
-	void loadShellIcon(std::wstring_view fileExtension) const;
+	void loadIconResource(std::initializer_list<int> iconsIdx) const;
+	void loadShellIcon(std::initializer_list<std::wstring_view> fileExtensions) const;
 };
 
 }

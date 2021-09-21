@@ -3,6 +3,7 @@
 #include "ImageList.h"
 #include "internals.h"
 using namespace core;
+using std::initializer_list;
 using std::invalid_argument;
 using std::system_error;
 using std::wstring_view;
@@ -46,26 +47,24 @@ SIZE ImageList::resolution() const
 	return SIZE{cx, cy};
 }
 
-void ImageList::loadIconResource(int iconIdx) const
+void ImageList::loadIconResource(initializer_list<int> iconsIdx) const
 {
-	HICON hIcon = (HICON)LoadImageW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(iconIdx),
-		IMAGE_ICON, this->sz.cx, this->sz.cy, LR_DEFAULTCOLOR);
-	if (!hIcon) {
-		throw system_error(GetLastError(), std::system_category(), "LoadImageW failed");
-	}
+	for (int iconIdx : iconsIdx) {
+		HICON hIcon = (HICON)LoadImageW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(iconIdx),
+			IMAGE_ICON, this->sz.cx, this->sz.cy, LR_DEFAULTCOLOR);
+		if (!hIcon) {
+			throw system_error(GetLastError(), std::system_category(), "LoadImageW failed");
+		}
 
-	if (ImageList_AddIcon(this->hil, hIcon) == -1) {
-		throw system_error(GetLastError(), std::system_category(), "ImageList_AddIcon failed");
+		if (ImageList_AddIcon(this->hil, hIcon) == -1) {
+			throw system_error(GetLastError(), std::system_category(), "ImageList_AddIcon failed");
+		}
+		DestroyIcon(hIcon);
 	}
-	DestroyIcon(hIcon);
 }
 
-void ImageList::loadShellIcon(wstring_view fileExtension) const
+void ImageList::loadShellIcon(initializer_list<wstring_view> fileExtensions) const
 {
-	wchar_t extens[16] = {0};
-	lstrcpyW(extens, (fileExtension[0] == L'.') ? L"*" : L"*."); // prepend dot if it doesn't have
-	lstrcatW(extens, fileExtension.data());
-
 	SIZE iconRes = this->resolution();
 
 	if (iconRes.cx != 16
@@ -75,29 +74,35 @@ void ImageList::loadShellIcon(wstring_view fileExtension) const
 
 	int shil;
 	switch (iconRes.cx) {
-		case 16: shil = SHIL_SMALL; break;
-		case 32: shil = SHIL_LARGE; break;
-		case 48: shil = SHIL_EXTRALARGE; break;
-		case 256: shil = SHIL_JUMBO;
+	case 16: shil = SHIL_SMALL; break;
+	case 32: shil = SHIL_LARGE; break;
+	case 48: shil = SHIL_EXTRALARGE; break;
+	case 256: shil = SHIL_JUMBO;
 	}
 
 	HIMAGELIST hilShell = core_internals::ShellImageList(shil); // http://stackoverflow.com/a/30496252
 
-	SHFILEINFO shfi = {0};
-	if (!SHGetFileInfoW(extens, FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi),
-		SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX))
-	{
-		throw system_error(GetLastError(), std::system_category(), "SHGetFileInfoW failed.");
-	}
+	for (wstring_view fileExtension : fileExtensions) {
+		wchar_t extens[16] = {0};
+		lstrcpyW(extens, (fileExtension[0] == L'.') ? L"*" : L"*."); // prepend dot if it doesn't have
+		lstrcatW(extens, fileExtension.data());
 
-	HICON hIcon = ImageList_GetIcon(hilShell, shfi.iIcon, ILD_NORMAL);
-	if (!hIcon) {
-		throw system_error(GetLastError(), std::system_category(), "ImageList_GetIcon failed.");
-	}
+		SHFILEINFO shfi = {0};
+		if (!SHGetFileInfoW(extens, FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi),
+			SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX))
+		{
+			throw system_error(GetLastError(), std::system_category(), "SHGetFileInfoW failed.");
+		}
 
-	if (ImageList_AddIcon(this->hil, hIcon) == -1) {
-		throw system_error(GetLastError(), std::system_category(), "ImageList_AddIcon failed.");
-	}
+		HICON hIcon = ImageList_GetIcon(hilShell, shfi.iIcon, ILD_NORMAL);
+		if (!hIcon) {
+			throw system_error(GetLastError(), std::system_category(), "ImageList_GetIcon failed.");
+		}
 
-	DestroyIcon(hIcon);
+		if (ImageList_AddIcon(this->hil, hIcon) == -1) {
+			throw system_error(GetLastError(), std::system_category(), "ImageList_AddIcon failed.");
+		}
+
+		DestroyIcon(hIcon);
+	}
 }
