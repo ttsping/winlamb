@@ -44,7 +44,7 @@ void WindowThread::runDetachedThread(function<void()> func) const
 	if (hThread) CloseHandle(hThread);
 }
 
-bool WindowThread::processUiThreadMsg(UINT msg, WPARAM wp, LPARAM lp) const
+bool WindowThread::processUiThreadMsg(UINT msg, WPARAM wp, LPARAM lp) const noexcept
 {
 	if (msg != WM_UI_THREAD || wp != 0xdead'beef) return false;
 

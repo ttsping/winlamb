@@ -215,7 +215,5 @@ void ListView::showContextMenu(bool followCursor, bool hasCtrl, bool hasShift) c
 		}
 	}
 
-	Menu tmpMenu{*this->contextMenu};
-	tmpMenu.showAtPoint(menuPos, GetParent(this->hWnd()), optional{this->hWnd()});
-	tmpMenu.leak();
+	this->contextMenu->showAtPoint(menuPos, GetParent(this->hWnd()), optional{this->hWnd()});
 }

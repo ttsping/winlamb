@@ -13,25 +13,26 @@ Font& Font::operator=(Font&& other) noexcept
 	return *this;
 }
 
+Font& Font::operator=(HFONT hf) noexcept
+{
+	this->destroy();
+	this->hf = hf;
+	return *this;
+}
+
+Font::Font(const LOGFONT& lf)
+	: hf{nullptr}
+{
+	if (!(this->hf = CreateFontIndirectW(&lf))) {
+		throw system_error(GetLastError(), std::system_category(), "CreateFontIndirectW failed");
+	}
+}
+
 void Font::destroy() noexcept
 {
 	if (this->hf) {
 		DeleteObject(this->hf);
 		this->hf = nullptr;
-	}
-}
-
-HFONT Font::leak()
-{
-	HFONT h = this->hf;
-	this->hf = nullptr;
-	return h;
-}
-
-void Font::create(const LOGFONT& lf)
-{
-	if (!(this->hf = CreateFontIndirectW(&lf))) {
-		throw system_error(GetLastError(), std::system_category(), "CreateFontIndirectW failed");
 	}
 }
 
@@ -44,7 +45,7 @@ void Font::getObject(LOGFONT& lf) const
 
 const Font& Font::UiFont()
 {
-	static Font globalUi;
+	static Font globalUi{nullptr};
 
 	if (!globalUi.hFont()) { // not created yet?
 		NONCLIENTMETRICS ncm = {0};

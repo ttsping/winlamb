@@ -13,15 +13,15 @@ class Window {
 	friend Dialog;
 
 private:
-	HWND hw = nullptr;
+	HWND hw;
 
 public:
 	virtual ~Window() { }
 
-	Window() = default;
-	explicit constexpr Window(HWND hWnd) : hw{hWnd} { }
+	constexpr Window() noexcept : hw{nullptr} { }
+	explicit constexpr Window(HWND hWnd) noexcept : hw{hWnd} { }
 
-	[[nodiscard]] constexpr HWND hWnd() const { return this->hw; }
+	[[nodiscard]] constexpr HWND hWnd() const noexcept { return this->hw; }
 };
 
 }

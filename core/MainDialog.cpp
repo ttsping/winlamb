@@ -32,15 +32,12 @@ int MainDialog::run(HINSTANCE hInst, int cmdShow)
 void MainDialog::putWindowIcon(HWND hDlg)
 {
 	if (!this->iconId) return;
-	HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hDlg, GWLP_HINSTANCE);
-		
-	Icon ico16;
-	ico16.loadResource(this->iconId, SIZE{16, 16}, optional{hInst});
-	SendMessageW(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)ico16.hIcon());
+	HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hDlg, GWLP_HINSTANCE);		
 
-	Icon ico32;
-	ico32.loadResource(this->iconId, SIZE{32, 32}, optional{hInst});
-	SendMessageW(hDlg, WM_SETICON, ICON_BIG, (LPARAM)ico32.hIcon());
+	SendMessageW(hDlg, WM_SETICON, ICON_SMALL,
+		(LPARAM)Icon{this->iconId, SIZE{16, 16}, optional{hInst}}.hIcon());
+	SendMessageW(hDlg, WM_SETICON, ICON_BIG,
+		(LPARAM)Icon{this->iconId, SIZE{32, 32}, optional{hInst}}.hIcon());
 }
 
 int MainDialog::loop(HWND hDlg, HACCEL hAccel)

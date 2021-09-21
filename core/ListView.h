@@ -2,8 +2,9 @@
 #pragma once
 #include <optional>
 #include <string_view>
-#include "NativeControl.h"
 #include "ImageList.h"
+#include "NativeControl.h"
+#include "Menu.h"
 #include <CommCtrl.h>
 
 namespace core {
@@ -42,15 +43,15 @@ public:
 	};
 
 private:
-	std::optional<HMENU> contextMenu;
+	std::optional<Menu> contextMenu;
 
 public:
 	Columns columns{*this};
 	Items items{*this};
 
-	explicit constexpr ListView(HWND hCtrl, std::optional<HMENU> contextMenu = std::nullopt)
+	explicit ListView(HWND hCtrl, std::optional<Menu> contextMenu = std::nullopt)
 		: NativeControl{hCtrl}, contextMenu{contextMenu} { }
-	ListView(HWND hParent, int ctrlId, std::optional<HMENU> contextMenu = std::nullopt)
+	ListView(HWND hParent, int ctrlId, std::optional<Menu> contextMenu = std::nullopt)
 		: NativeControl{hParent, ctrlId}, contextMenu{contextMenu} { }
 
 	int ctrlId() const { return GetDlgCtrlID(this->hWnd()); }

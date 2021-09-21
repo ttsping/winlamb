@@ -5,11 +5,14 @@ using namespace core;
 using std::optional;
 using std::system_error;
 
-Menu& Menu::operator=(Menu&& other) noexcept
+Menu::Menu(int menuId, optional<HINSTANCE> hInst)
+	: hm{nullptr}
 {
-	this->destroy();
-	std::swap(this->hm, other.hm);
-	return *this;
+	if (!(this->hm = LoadMenuW(hInst ? *hInst : GetModuleHandleW(nullptr),
+		MAKEINTRESOURCEW(menuId))))
+	{
+		throw system_error(GetLastError(), std::system_category(), "LoadMenuW failed");
+	}
 }
 
 void Menu::destroy() noexcept
@@ -20,27 +23,9 @@ void Menu::destroy() noexcept
 	}
 }
 
-HMENU Menu::leak()
+Menu Menu::subMenu(UINT pos) const noexcept
 {
-	HMENU h = this->hm;
-	this->hm = nullptr;
-	return h;
-}
-
-HMENU Menu::subMenu(UINT pos) const
-{
-	return GetSubMenu(this->hm, pos);
-}
-
-void Menu::loadResource(int menuId, std::optional<HINSTANCE> hInst)
-{
-	this->destroy();
-
-	if (!(this->hm = LoadMenuW(hInst ? *hInst : GetModuleHandleW(nullptr),
-		MAKEINTRESOURCEW(menuId))))
-	{
-		throw system_error(GetLastError(), std::system_category(), "LoadMenuW failed");
-	}
+	return Menu{GetSubMenu(this->hm, pos)};
 }
 
 void Menu::showAtPoint(POINT pos, HWND hParent, optional<HWND> hCoordsRelativeTo) const

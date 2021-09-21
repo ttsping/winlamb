@@ -6,25 +6,22 @@
 
 namespace core {
 
-// Manages an HMENU handle.
+// Non-owning wrapper to HMENU handle.
 class Menu final {
 private:
-	HMENU hm = nullptr;
+	HMENU hm;
 
 public:
-	~Menu() { this->destroy(); }
+	constexpr Menu(const Menu& other) noexcept : hm{other.hm} { }
+	explicit constexpr Menu(HMENU hm) noexcept : hm{hm} { }
+	constexpr Menu& operator=(const Menu& other) noexcept { this->hm = other.hm; return *this; }
+	constexpr Menu& operator=(HMENU hIco) noexcept { this->hm = hIco; return *this; }
 
-	Menu() = default;
-	explicit constexpr Menu(HMENU hm) : hm{hm} { }
-	Menu(Menu&& other) noexcept { this->operator=(std::move(other)); }
-	Menu& operator=(Menu&& other) noexcept;
-	Menu& operator=(HMENU hm) noexcept { this->hm = hm; }
+	explicit Menu(int menuId, std::optional<HINSTANCE> hInst = std::nullopt);
 
 	void destroy() noexcept;
-	[[nodiscard]] constexpr HMENU hMenu() const { return this->hm; }
-	HMENU leak();
-	[[nodiscard]] HMENU subMenu(UINT pos) const;
-	void loadResource(int menuId, std::optional<HINSTANCE> hInst = std::nullopt);
+	[[nodiscard]] constexpr HMENU hMenu() const noexcept { return this->hm; }
+	[[nodiscard]] Menu subMenu(UINT pos) const noexcept;
 	void showAtPoint(POINT pos, HWND hParent, std::optional<HWND> hCoordsRelativeTo = std::nullopt) const;
 };
 

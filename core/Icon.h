@@ -7,25 +7,22 @@
 
 namespace core {
 
-// Manages an HICON handle.
+// Non-owning wrapper to HICON handle.
 class Icon final {
 private:
-	HICON hIco = nullptr;
+	HICON hIco;
 
 public:
-	~Icon() { this->destroy(); }
+	constexpr Icon(const Icon& other) noexcept : hIco{other.hIco} { }
+	explicit constexpr Icon(HICON hIco) noexcept : hIco{hIco} { }
+	constexpr Icon& operator=(const Icon& other) noexcept { this->hIco = other.hIco; return *this; }
+	constexpr Icon& operator=(HICON hIco) noexcept { this->hIco = hIco; return *this; }
 
-	Icon() = default;
-	explicit constexpr Icon(HICON hIco) : hIco{hIco} { }
-	Icon(Icon&& other) noexcept { this->operator=(std::move(other)); }
-	Icon& operator=(Icon&& other) noexcept;
-	Icon& operator=(HICON hIco) noexcept { this->hIco = hIco; }
+	Icon(int iconId, SIZE resolution, std::optional<HINSTANCE> hInst = std::nullopt);
+	Icon(std::wstring_view fileExtension, SIZE resolution);
 
 	void destroy() noexcept;
-	[[nodiscard]] constexpr HICON hIcon() const { return this->hIco; }
-	HICON leak();
-	void loadResource(int iconId, SIZE resolution, std::optional<HINSTANCE> hInst = std::nullopt);
-	void loadShell(std::wstring_view fileExtension, SIZE resolution);
+	[[nodiscard]] constexpr HICON hIcon() const noexcept { return this->hIco; }
 };
 
 }

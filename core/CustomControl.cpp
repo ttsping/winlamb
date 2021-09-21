@@ -53,13 +53,13 @@ void CustomControl::create(Window* parent, int x, int y, int cx, int cy)
 	}
 }
 
-WORD CustomControl::NextCtrlId()
+WORD CustomControl::NextCtrlId() noexcept
 {
 	static WORD ctrlId = 20'000; // in-between Visual Studio Resource Editor values
 	return ++ctrlId;
 }
 
-LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) noexcept
 {
 	CustomControl* pObj;
 
@@ -91,10 +91,10 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 	}
 
-	return maybeRet ? maybeRet.value() : DefWindowProcW(hWnd, msg, wp, lp);
+	return maybeRet ? *maybeRet : DefWindowProcW(hWnd, msg, wp, lp);
 }
 
-bool CustomControl::PaintThemeBorders(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+bool CustomControl::PaintThemeBorders(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) noexcept
 {
 	if (msg != WM_NCPAINT) return false;
 
