@@ -7,7 +7,7 @@
 
 namespace core {
 
-// Encapsulates a memory-mapped file.
+// Manages a memory-mapped file.
 class FileMapped final {
 private:
 	File file;

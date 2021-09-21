@@ -2,10 +2,12 @@
 #include <string>
 #include <system_error>
 #include "MainDialog.h"
+#include "Icon.h"
+#include "str.h"
 #include <CommCtrl.h>
-#include "../core/str.h"
 #pragma comment(lib, "Comctl32.lib")
 using namespace core;
+using std::optional;
 using std::system_error;
 using std::wstring;
 
@@ -29,15 +31,16 @@ int MainDialog::run(HINSTANCE hInst, int cmdShow)
 
 void MainDialog::putWindowIcon(HWND hDlg)
 {
-	if (this->iconId) {
-		HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hDlg, GWLP_HINSTANCE);
-		SendMessageW(hDlg, WM_SETICON, ICON_SMALL,
-			(LPARAM)(HICON)LoadImageW(hInst,
-				MAKEINTRESOURCEW(this->iconId), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR));
-		SendMessageW(hDlg, WM_SETICON, ICON_BIG,
-			(LPARAM)(HICON)LoadImageW(hInst,
-				MAKEINTRESOURCEW(this->iconId), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR));
-	}
+	if (!this->iconId) return;
+	HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hDlg, GWLP_HINSTANCE);
+		
+	Icon ico16;
+	ico16.loadResource(this->iconId, SIZE{16, 16}, optional{hInst});
+	SendMessageW(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)ico16.hIcon());
+
+	Icon ico32;
+	ico32.loadResource(this->iconId, SIZE{32, 32}, optional{hInst});
+	SendMessageW(hDlg, WM_SETICON, ICON_BIG, (LPARAM)ico32.hIcon());
 }
 
 int MainDialog::loop(HWND hDlg, HACCEL hAccel)

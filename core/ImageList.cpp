@@ -7,7 +7,6 @@ using std::system_error;
 using std::wstring_view;
 
 ImageList::ImageList(SIZE resolution, UINT initialSize, DWORD flags)
-	: sz{resolution}
 {
 	if (!(this->hil = ImageList_Create(resolution.cx, resolution.cy, flags, initialSize, 1))) {
 		throw system_error(GetLastError(), std::system_category(), "ImageList_Create failed");

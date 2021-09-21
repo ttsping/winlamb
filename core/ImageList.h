@@ -7,22 +7,23 @@
 
 namespace core {
 
-// Manages an image list handle.
+// Manages an HIMAGELIST handle.
 class ImageList final {
 private:
 	HIMAGELIST hil;
-	SIZE sz;
 
 public:
 	~ImageList() { this->destroy(); }
 
+	constexpr ImageList(HIMAGELIST hil) : hil{hil} { }
 	ImageList(SIZE resolution, UINT initialSize = 1, DWORD flags = ILC_COLOR32);
 	ImageList(ImageList&& other) noexcept { this->operator=(std::move(other)); }
 	ImageList& operator=(ImageList&& other) noexcept;
+	ImageList& operator=(HIMAGELIST hil) noexcept { this->hil = hil; }
 
 	void destroy() noexcept;
 	[[nodiscard]] constexpr HIMAGELIST hImageList() const { return this->hil; }
-	[[nodiscard]] HIMAGELIST leak();
+	HIMAGELIST leak();
 	[[nodiscard]] size_t count() const;
 	[[nodiscard]] SIZE resolution() const;
 	void load(const Icon& ico) const;

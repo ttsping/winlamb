@@ -5,6 +5,7 @@
 #include <commoncontrols.h> // IID_IImageList
 using namespace core;
 using std::invalid_argument;
+using std::optional;
 using std::system_error;
 using std::wstring_view;
 
@@ -30,12 +31,12 @@ HICON Icon::leak()
 	return h;
 }
 
-void Icon::loadResource(int iconId, SIZE resolution)
+void Icon::loadResource(int iconId, SIZE resolution, optional<HINSTANCE> hInst)
 {
 	this->destroy();
 
-	if (!(this->hIco = (HICON)LoadImageW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(iconId),
-		IMAGE_ICON, resolution.cx, resolution.cy, LR_DEFAULTCOLOR)))
+	if (!(this->hIco = (HICON)LoadImageW(hInst ? *hInst : GetModuleHandleW(nullptr),
+		MAKEINTRESOURCEW(iconId), IMAGE_ICON, resolution.cx, resolution.cy, LR_DEFAULTCOLOR)))
 	{
 		throw system_error(GetLastError(), std::system_category(), "LoadImageW failed");
 	}

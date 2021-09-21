@@ -7,10 +7,10 @@
 
 namespace core {
 
-// Encapsulates a file HANDLE.
+// Manages a file HANDLE.
 class File final {
 public:
-	// Encapsulates a file lock.
+	// Manages a file lock.
 	class Lock final {
 		friend File;
 	private:

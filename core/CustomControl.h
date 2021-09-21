@@ -4,6 +4,7 @@
 
 namespace core {
 
+// Manages a custom child control.
 class CustomControl : public WindowThread {
 private:
 	DWORD classStyles;

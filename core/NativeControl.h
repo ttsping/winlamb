@@ -8,6 +8,7 @@ namespace core {
 class NativeControl : public Window {
 public:
 	explicit constexpr NativeControl(HWND hCtrl) : Window{hCtrl} { }
+	NativeControl(HWND hParent, int ctrlId) : Window{GetDlgItem(hParent, ctrlId)} { }
 };
 
 }
