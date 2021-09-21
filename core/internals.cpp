@@ -1,6 +1,7 @@
 
 #include <system_error>
 #include "internals.h"
+#include <commoncontrols.h>
 using std::tuple;
 
 int core_internals::Lippincott() noexcept
@@ -20,4 +21,15 @@ int core_internals::Lippincott() noexcept
 
 	MessageBoxA(nullptr, msg, caption, MB_ICONERROR);
 	return code;
+}
+
+HIMAGELIST core_internals::ShellImageList(int shil)
+{
+	// Implemented here because commoncontrols.h defines an ImageList type.
+
+	HIMAGELIST hil = nullptr;
+	if (HRESULT hr = SHGetImageList(shil, IID_IImageList, (void**)(&hil)); FAILED(hr)) {
+		throw std::system_error(hr, std::system_category(), "SHGetImageList failed.");
+	}
+	return hil;
 }

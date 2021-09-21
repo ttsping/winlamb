@@ -1,5 +1,6 @@
 
 #pragma once
+#include <string_view>
 #include <Windows.h>
 #include <CommCtrl.h>
 
@@ -20,7 +21,11 @@ public:
 
 	void destroy() noexcept;
 	[[nodiscard]] constexpr HIMAGELIST hImageList() const { return this->hil; }
+	[[nodiscard]] HIMAGELIST leak();
+	[[nodiscard]] size_t count() const;
+	[[nodiscard]] SIZE resolution() const;
 	void loadIconResource(int iconIdx) const;
+	void loadShellIcon(std::wstring_view fileExtension) const;
 };
 
 }
