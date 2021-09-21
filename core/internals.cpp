@@ -1,35 +1,43 @@
 
 #include <system_error>
 #include "internals.h"
-#include <commoncontrols.h>
+#include "str.h"
+#include <CommCtrl.h>
 using std::tuple;
+using std::wstring;
 
 int core_internals::Lippincott() noexcept
 {
+	using core::str::ToWide;
+
 	int code = -1;
-	const char* caption = "Oops... unknown error";
-	const char* msg = "An unknown exception, not derived from std::exception, was thrown.";
+	const wchar_t* instr = L"Unknown exception";
+	wstring msg = L"An unknown exception, not derived from std::exception, was thrown.";
 
 	// https://stackoverflow.com/a/48036486/6923555
 	try { throw; }
-	catch (const std::invalid_argument& e) { msg = e.what(); caption = "Oops... invalid argument error"; }
-	catch (const std::out_of_range& e) { msg = e.what(); caption = "Oops... out of range error"; }
-	catch (const std::logic_error& e) { msg = e.what(); caption = "Oops... logic error"; }
-	catch (const std::system_error& e) { msg = e.what(); caption = "Oops... system error"; code = e.code().value(); }
-	catch (const std::runtime_error& e) { msg = e.what(); caption = "Oops... runtime error"; }
-	catch (const std::exception& e) { msg = e.what(); caption = "Oops... generic error"; }
+	catch (const std::invalid_argument& e) { msg = ToWide(e.what()); instr = L"Invalid argument exception"; }
+	catch (const std::out_of_range& e) { msg = ToWide(e.what()); instr = L"Out of range exception"; }
+	catch (const std::logic_error& e) { msg = ToWide(e.what()); instr = L"Logic exception"; }
+	catch (const std::system_error& e) { msg = ToWide(e.what()); instr = L"System exception"; code = e.code().value(); }
+	catch (const std::runtime_error& e) { msg = ToWide(e.what()); instr = L"Runtime exception"; }
+	catch (const std::exception& e) { msg = ToWide(e.what()); instr = L"Generic exception"; }
 
-	MessageBoxA(nullptr, msg, caption, MB_ICONERROR);
+	TASKDIALOG_BUTTON btn = {0};
+	btn.nButtonID = IDOK;
+	btn.pszButtonText = L"Terminate";
+
+	TASKDIALOGCONFIG tdc = {0};
+	tdc.cbSize = sizeof(TASKDIALOGCONFIG);
+	tdc.dwFlags = TDF_ALLOW_DIALOG_CANCELLATION;
+	tdc.cButtons = 1;
+	tdc.pButtons = &btn;
+	tdc.pszMainIcon = TD_ERROR_ICON;
+	tdc.pszWindowTitle = L"Oops...";
+	tdc.pszMainInstruction = instr;
+	tdc.pszContent = msg.c_str();
+
+	TaskDialogIndirect(&tdc, nullptr, nullptr, nullptr);
+
 	return code;
-}
-
-HIMAGELIST core_internals::ShellImageList(int shil)
-{
-	// Implemented here because commoncontrols.h defines its own ImageList type.
-
-	HIMAGELIST hil = nullptr;
-	if (HRESULT hr = SHGetImageList(shil, IID_IImageList, (void**)(&hil)); FAILED(hr)) {
-		throw std::system_error(hr, std::system_category(), "SHGetImageList failed.");
-	}
-	return hil;
 }

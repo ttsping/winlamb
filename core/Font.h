@@ -19,9 +19,10 @@ public:
 	Font& operator=(Font&& other) noexcept;
 
 	void destroy() noexcept;
+	[[nodiscard]] constexpr HFONT hFont() const { return this->hf; }
+	[[nodiscard]] HFONT leak();
 	void create(const LOGFONT& lf);
 	void getObject(LOGFONT& lf) const;
-	[[nodiscard]] constexpr HFONT hFont() const { return this->hf; }
 
 	static const Font& UiFont();
 };

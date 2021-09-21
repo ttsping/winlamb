@@ -6,6 +6,7 @@ using namespace core;
 using std::invalid_argument;
 using std::optional;
 using std::span;
+using std::string_view;
 using std::vector;
 using std::wstring;
 using std::wstring_view;
@@ -107,7 +108,7 @@ optional<const wchar_t*> str::GetLineBreak(wstring_view s)
 	return std::nullopt; // unknown
 }
 
-[[nodiscard]] static wstring _ParseAscii(span<const BYTE> src)
+[[nodiscard]] static wstring _ParseAscii(span<const char> src)
 {
 	if (src.empty()) return {};
 
@@ -117,7 +118,7 @@ optional<const wchar_t*> str::GetLineBreak(wstring_view s)
 			ret.resize(i);
 			return ret;
 		}
-		ret[i] = static_cast<wchar_t>(src[i]); // raw conversion
+		ret[i] = (wchar_t)src[i]; // raw conversion
 	}
 
 	str::TrimNulls(ret);
@@ -146,7 +147,7 @@ wstring str::Parse(span<const BYTE> src)
 
 	switch (encInfo.encType) {
 	case Encoding::UNKNOWN:
-	case Encoding::ASCII:   return _ParseAscii(src);
+	case Encoding::ASCII:   return _ParseAscii(span{(const char*)src.data(), src.size()});
 	case Encoding::WIN1252: return _ParseCodePage(src, 1252);
 	case Encoding::UTF8:    return _ParseCodePage(src, CP_UTF8);
 	case Encoding::UTF16BE: throw invalid_argument("UTF-16 big endian: encoding not implemented.");
@@ -284,7 +285,7 @@ vector<wstring> str::SplitLines(wstring_view s)
 	if (optional<const wchar_t*> lineBreak = str::GetLineBreak(s); lineBreak) {
 		return str::Split(s, *lineBreak, std::nullopt, true);
 	}
-	return {wstring{s}}; // a single line
+	return vector{wstring{s}}; // a single line
 }
 
 bool str::StartsWith(wstring_view s, wstring_view start)
@@ -311,6 +312,11 @@ wstring str::ToUpper(wstring_view s)
 	wstring ret = s.data();
 	CharUpperBuffW(&ret[0], static_cast<DWORD>(ret.length()));
 	return ret;
+}
+
+wstring str::ToWide(std::string_view ansiStr)
+{
+	return _ParseAscii(span{ansiStr.data(), ansiStr.length()});
 }
 
 wstring& str::Trim(wstring& s)
@@ -366,25 +372,25 @@ str::EncodingInfo str::GetEncoding(span<const BYTE> src)
 	// https://en.wikipedia.org/wiki/Byte_order_mark
 
 	BYTE utf8[] = {0xef, 0xbb, 0xbf};
-	if (match(utf8)) return {Encoding::UTF8, ARRAYSIZE(utf8)};
+	if (match(utf8)) return EncodingInfo{Encoding::UTF8, ARRAYSIZE(utf8)};
 
 	BYTE utf16be[] = {0xfe, 0xff};
-	if (match(utf16be)) return {Encoding::UTF16BE, ARRAYSIZE(utf16be)};
+	if (match(utf16be)) return EncodingInfo{Encoding::UTF16BE, ARRAYSIZE(utf16be)};
 
 	BYTE utf16le[] = {0xff, 0xfe};
-	if (match(utf16le)) return {Encoding::UTF16LE, ARRAYSIZE(utf16le)};
+	if (match(utf16le)) return EncodingInfo{Encoding::UTF16LE, ARRAYSIZE(utf16le)};
 
 	BYTE utf32be[] = {0x00, 0x00, 0xfe, 0xff};
-	if (match(utf32be)) return {Encoding::UTF32BE, ARRAYSIZE(utf32be)};
+	if (match(utf32be)) return EncodingInfo{Encoding::UTF32BE, ARRAYSIZE(utf32be)};
 
 	BYTE utf32le[] = {0xff, 0xfe, 0x00, 0x00};
-	if (match(utf32le)) return {Encoding::UTF32LE, ARRAYSIZE(utf32le)};
+	if (match(utf32le)) return EncodingInfo{Encoding::UTF32LE, ARRAYSIZE(utf32le)};
 
 	BYTE scsu[] = {0x0e, 0xfe, 0xff};
-	if (match(scsu)) return {Encoding::SCSU, ARRAYSIZE(scsu)};
+	if (match(scsu)) return EncodingInfo{Encoding::SCSU, ARRAYSIZE(scsu)};
 
 	BYTE bocu1[] = {0xfb, 0xee, 0x28};
-	if (match(bocu1)) return {Encoding::BOCU1, ARRAYSIZE(bocu1)};
+	if (match(bocu1)) return EncodingInfo{Encoding::BOCU1, ARRAYSIZE(bocu1)};
 
 	// No BOM found, guess UTF-8 without BOM, or Windows-1252 (superset of ISO-8859-1).
 	bool canBeWin1252 = false;
@@ -395,9 +401,9 @@ str::EncodingInfo str::GetEncoding(span<const BYTE> src)
 				(src[i] == 0xc2 && (src[i + 1] >= 0xa1 && src[i + 1] <= 0xbf)) || // http://www.utf8-chartable.de
 				(src[i] == 0xc3 && (src[i + 1] >= 0x80 && src[i + 1] <= 0xbf))))
 			{
-				return {Encoding::UTF8, 0}; // UTF-8 without BOM
+				return EncodingInfo{Encoding::UTF8, 0}; // UTF-8 without BOM
 			}
 		}
 	}
-	return {(canBeWin1252 ? Encoding::WIN1252 : Encoding::ASCII), 0};
+	return EncodingInfo{(canBeWin1252 ? Encoding::WIN1252 : Encoding::ASCII), 0};
 }

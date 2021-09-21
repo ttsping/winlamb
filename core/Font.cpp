@@ -21,6 +21,13 @@ void Font::destroy() noexcept
 	}
 }
 
+HFONT Font::leak()
+{
+	HFONT h = this->hf;
+	this->hf = nullptr;
+	return h;
+}
+
 void Font::create(const LOGFONT& lf)
 {
 	if (!(this->hf = CreateFontIndirectW(&lf))) {

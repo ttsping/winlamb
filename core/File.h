@@ -38,9 +38,9 @@ public:
 	File& operator=(File&& other) noexcept;
 
 	void close() noexcept;
+	[[nodiscard]] constexpr HANDLE handle() const { return this->hf; }
 	void open(std::wstring_view filePath, Access access);
 	[[nodiscard]] Lock lock(size_t offset, size_t numBytes) const { return Lock(*this, offset, numBytes); }
-	[[nodiscard]] constexpr HANDLE handle() const { return this->hf; }
 	[[nodiscard]] INT64 offsetPtr() const;
 	void offsetPtrRewind() const;
 	[[nodiscard]] size_t size() const;

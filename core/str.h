@@ -31,6 +31,7 @@ std::wstring& Reverse(std::wstring& s);
 [[nodiscard]] bool StartsWithI(std::wstring_view s, std::wstring_view start);
 [[nodiscard]] std::wstring ToLower(std::wstring_view s);
 [[nodiscard]] std::wstring ToUpper(std::wstring_view s);
+[[nodiscard]] std::wstring ToWide(std::string_view ansiStr);
 std::wstring& Trim(std::wstring& s);
 std::wstring& TrimNulls(std::wstring& s);
 

@@ -3,6 +3,7 @@
 #include <string_view>
 #include <Windows.h>
 #include <CommCtrl.h>
+#include "Icon.h"
 
 namespace core {
 
@@ -24,6 +25,7 @@ public:
 	[[nodiscard]] HIMAGELIST leak();
 	[[nodiscard]] size_t count() const;
 	[[nodiscard]] SIZE resolution() const;
+	void load(const Icon& ico) const;
 	void loadIconResource(std::initializer_list<int> iconsIdx) const;
 	void loadShellIcon(std::initializer_list<std::wstring_view> fileExtensions) const;
 };
