@@ -14,8 +14,9 @@ private:
 
 public:
 	constexpr Icon(const Icon& other) noexcept : hIco{other.hIco} { }
-	explicit constexpr Icon(HICON hIco) noexcept : hIco{hIco} { }
 	constexpr Icon& operator=(const Icon& other) noexcept { this->hIco = other.hIco; return *this; }
+
+	explicit constexpr Icon(HICON hIco) noexcept : hIco{hIco} { }
 	constexpr Icon& operator=(HICON hIco) noexcept { this->hIco = hIco; return *this; }
 
 	Icon(int iconId, SIZE resolution, std::optional<HINSTANCE> hInst = std::nullopt);

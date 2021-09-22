@@ -24,10 +24,9 @@ void File::close() noexcept
 	}
 }
 
-void File::open(wstring_view filePath, Access access)
+File::File(wstring_view filePath, Access access)
+	: hf{nullptr}
 {
-	this->close();
-
 	DWORD readWrite = GENERIC_READ | (access == Access::READ_EXISTING ? 0 : GENERIC_WRITE);
 	DWORD share = access == Access::READ_EXISTING ? FILE_SHARE_READ : 0;
 	DWORD disposition = 0;

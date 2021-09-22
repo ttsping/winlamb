@@ -22,12 +22,12 @@ public:
 
 	std::vector<Section> sections;
 
-	Ini() = default;
-	explicit Ini(std::wstring_view filePath) { this->load(filePath); }
 	Ini(Ini&& other) = default;
 	Ini& operator=(Ini&& other) = default;
 
-	void load(std::wstring_view filePath);
+	Ini() = default;
+	explicit Ini(std::wstring_view filePath);
+
 	void save(std::wstring_view filePath);
 	[[nodiscard]] std::optional<std::reference_wrapper<const std::wstring>> get(std::wstring_view section, std::wstring_view key) const;
 	[[nodiscard]] std::optional<std::reference_wrapper<std::wstring>> get(std::wstring_view section, std::wstring_view key);

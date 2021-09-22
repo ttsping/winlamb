@@ -7,13 +7,31 @@ using std::system_error;
 using std::vector;
 using std::wstring_view;
 
+constexpr FileMapped::FileMapped(FileMapped&& other) noexcept
+	: file{std::move(other.file)}, hMap{nullptr}, pMem{nullptr}, sz{0}, readOnly{true}
+{
+	std::swap(this->hMap, other.hMap);
+	std::swap(this->pMem, other.pMem);
+	std::swap(this->sz, other.sz);
+	std::swap(this->readOnly, other.readOnly);
+}
+
 FileMapped& FileMapped::operator=(FileMapped&& other) noexcept
 {
 	this->close();
-	std::swap(this->file, other.file);
+	this->file = std::move(other.file);
 	std::swap(this->hMap, other.hMap);
 	std::swap(this->pMem, other.pMem);
+	std::swap(this->sz, other.sz);
+	std::swap(this->readOnly, other.readOnly);
 	return *this;
+}
+
+FileMapped::FileMapped(wstring_view filePath, Access access)
+	: file{filePath, access == Access::READ ? File::Access::READ_EXISTING : File::Access::RW_EXISTING},
+		hMap{nullptr}, pMem{nullptr}, sz{0}, readOnly{access == Access::READ}
+{
+	this->mapInMemory();
 }
 
 void FileMapped::close() noexcept
@@ -29,16 +47,6 @@ void FileMapped::close() noexcept
 	this->file.close();
 	this->sz = 0;
 	this->readOnly = false;
-}
-
-void FileMapped::open(wstring_view filePath, Access access)
-{
-	this->close();
-	this->file.open(filePath, access == Access::READ
-		? File::Access::READ_EXISTING
-		: File::Access::RW_EXISTING);
-	this->readOnly = access == Access::READ;
-	this->mapInMemory();
 }
 
 void FileMapped::resize(size_t newSize)

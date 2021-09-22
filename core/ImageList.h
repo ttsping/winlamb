@@ -15,9 +15,10 @@ private:
 public:
 	~ImageList() { this->destroy(); }
 
-	ImageList(ImageList&& other) noexcept { this->operator=(std::move(other)); }
-	explicit constexpr ImageList(HIMAGELIST hil) noexcept : hil{hil} { }
+	constexpr ImageList(ImageList&& other) noexcept : hil{nullptr} { std::swap(this->hil, other.hil); }
 	ImageList& operator=(ImageList&& other) noexcept;
+
+	explicit constexpr ImageList(HIMAGELIST hil) noexcept : hil{hil} { }
 	ImageList& operator=(HIMAGELIST hil) noexcept;
 
 	explicit ImageList(SIZE resolution, UINT initialSize = 1, DWORD ilcFlags = ILC_COLOR32);

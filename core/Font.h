@@ -13,9 +13,10 @@ private:
 public:
 	~Font() { this->destroy(); }
 	
-	Font(Font&& other) noexcept { this->operator=(std::move(other)); }
-	explicit constexpr Font(HFONT hf) noexcept : hf{hf} { }
+	constexpr Font(Font&& other) noexcept : hf{nullptr} { std::swap(this->hf, other.hf); }
 	Font& operator=(Font&& other) noexcept;
+
+	explicit constexpr Font(HFONT hf) noexcept : hf{hf} { }
 	Font& operator=(HFONT hf) noexcept;
 
 	explicit Font(const LOGFONT& lf);

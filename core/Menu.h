@@ -13,8 +13,9 @@ private:
 
 public:
 	constexpr Menu(const Menu& other) noexcept : hm{other.hm} { }
-	explicit constexpr Menu(HMENU hm) noexcept : hm{hm} { }
 	constexpr Menu& operator=(const Menu& other) noexcept { this->hm = other.hm; return *this; }
+
+	explicit constexpr Menu(HMENU hm) noexcept : hm{hm} { }
 	constexpr Menu& operator=(HMENU hIco) noexcept { this->hm = hIco; return *this; }
 
 	explicit Menu(int menuId, std::optional<HINSTANCE> hInst = std::nullopt);

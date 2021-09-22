@@ -7,9 +7,11 @@
 
 namespace core {
 
-// Manages a file HANDLE.
+// Owning wrapper to a file HANDLE.
 class File final {
 public:
+	enum class Access { READ_EXISTING, RW_EXISTING, RW_OPEN_OR_CREATE };
+
 	// Manages a file lock.
 	class Lock final {
 		friend File;
@@ -25,21 +27,18 @@ public:
 	};
 
 private:
-	HANDLE hf = nullptr;
+	HANDLE hf;
 
 public:
-	enum class Access { READ_EXISTING, RW_EXISTING, RW_OPEN_OR_CREATE };
-
 	~File() { this->close(); }
 
-	File() = default;
-	File(std::wstring_view filePath, Access access) { this->open(filePath, access); }
-	File(File&& other) noexcept { this->operator=(std::move(other)); }
+	constexpr File(File&& other) noexcept : hf{nullptr} { std::swap(this->hf, other.hf); }
 	File& operator=(File&& other) noexcept;
 
+	File(std::wstring_view filePath, Access access);
+
 	void close() noexcept;
-	[[nodiscard]] constexpr HANDLE handle() const { return this->hf; }
-	void open(std::wstring_view filePath, Access access);
+	[[nodiscard]] constexpr HANDLE handle() const noexcept { return this->hf; }
 	[[nodiscard]] Lock lock(size_t offset, size_t numBytes) const { return Lock(*this, offset, numBytes); }
 	[[nodiscard]] INT64 offsetPtr() const;
 	void offsetPtrRewind() const;

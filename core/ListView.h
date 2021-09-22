@@ -9,7 +9,7 @@
 
 namespace core {
 
-// ListView native control.
+// Non-owning wrapper to native ListView control.
 class ListView final : public NativeControl {
 public:
 	// Expose column methods of a ListView.
@@ -46,13 +46,18 @@ private:
 	std::optional<Menu> contextMenu;
 
 public:
-	Columns columns{*this};
-	Items items{*this};
+	Columns columns;
+	Items items;
+
+	/*ListView(const ListView& other) noexcept
+		: contextMenu{contextMenu}, columns{columns}, items{items} { }*/
 
 	explicit ListView(HWND hCtrl, std::optional<Menu> contextMenu = std::nullopt)
-		: NativeControl{hCtrl}, contextMenu{contextMenu} { }
+		: NativeControl{hCtrl}, contextMenu{contextMenu},
+			columns{*this}, items{*this} { }
 	ListView(HWND hParent, int ctrlId, std::optional<Menu> contextMenu = std::nullopt)
-		: NativeControl{hParent, ctrlId}, contextMenu{contextMenu} { }
+		: NativeControl{hParent, ctrlId}, contextMenu{contextMenu},
+			columns{*this}, items{*this} { }
 
 	int ctrlId() const { return GetDlgCtrlID(this->hWnd()); }
 	bool handleMessages(UINT msg, LPARAM lp) const;

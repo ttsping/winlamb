@@ -9,10 +9,8 @@ using std::vector;
 using std::wstring;
 using std::wstring_view;
 
-void Ini::load(wstring_view filePath)
+Ini::Ini(wstring_view filePath)
 {
-	this->sections.clear();
-
 	FileMapped fin{filePath, FileMapped::Access::READ};
 	wstring contents = str::Parse(fin.hotSpan());
 	fin.close();

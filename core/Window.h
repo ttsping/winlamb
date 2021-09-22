@@ -18,8 +18,12 @@ private:
 public:
 	virtual ~Window() { }
 
+	constexpr Window(const Window& other) noexcept : hw{other.hw} { }
+	constexpr Window& operator=(const Window& other) noexcept { this->hw = other.hw; return *this; }
+
 	constexpr Window() noexcept : hw{nullptr} { }
 	explicit constexpr Window(HWND hWnd) noexcept : hw{hWnd} { }
+	
 
 	[[nodiscard]] constexpr HWND hWnd() const noexcept { return this->hw; }
 };
