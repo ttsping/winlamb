@@ -13,7 +13,7 @@ public:
 	constexpr NativeControl& operator=(const NativeControl& other) noexcept { this->Window::operator=(other); return *this; }
 
 	explicit constexpr NativeControl(HWND hCtrl) noexcept : Window{hCtrl} { }
-	NativeControl(HWND hParent, int ctrlId) noexcept : Window{GetDlgItem(hParent, ctrlId)} { }
+	NativeControl(HWND hParent, int ctrlId);
 };
 
 }

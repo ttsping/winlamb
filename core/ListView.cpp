@@ -142,11 +142,17 @@ RECT ListView::Items::rect(int index, int lvirPortion) const
 	return rc;
 }
 
-bool ListView::handleMessages(UINT msg, LPARAM lp) const
+ListView& ListView::operator=(const ListView& other) noexcept
 {
-	if (const NMHDR* pNm = (const NMHDR*)lp;
-		msg == WM_NOTIFY && pNm->idFrom == this->ctrlId())
-	{
+	this->NativeControl::operator=(other);
+	this->contextMenu = other.contextMenu;
+	// Note that "columns" and "items" remain the same, pointing to "this".
+	return *this;
+}
+
+bool ListView::onWmNotify(LPARAM lp) const
+{
+	if (const NMHDR* pNm = (const NMHDR*)lp; pNm->idFrom == this->ctrlId()) {
 		if (pNm->code == LVN_KEYDOWN) {
 			const NMLVKEYDOWN* pNkd = (const NMLVKEYDOWN*)lp;
 			bool hasCtrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
