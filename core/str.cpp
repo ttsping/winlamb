@@ -28,7 +28,7 @@ void str::Dbg(wstring_view format, ...)
 	wstring s = _Format(format, args);
 
 	va_end(args);
-	OutputDebugStringW(s.c_str());
+	OutputDebugString(s.c_str());
 }
 
 [[nodiscard]] static bool _EndsStartsFirstCheck(wstring_view s, wstring_view ending)
@@ -54,7 +54,7 @@ bool str::EndsWithI(std::wstring_view s, std::wstring_view ending)
 
 bool str::EqI(std::wstring_view s1, std::wstring_view s2)
 {
-	return !lstrcmpiW(s1.data(), s2.data());
+	return !lstrcmpi(s1.data(), s2.data());
 }
 
 optional<size_t> str::FindSubstr(wstring_view haystack, wstring_view needle, size_t offset)
@@ -303,14 +303,14 @@ bool str::StartsWithI(wstring_view s, wstring_view start)
 wstring str::ToLower(wstring_view s)
 {
 	wstring ret = s.data();
-	CharLowerBuffW(&ret[0], static_cast<DWORD>(ret.length()));
+	CharLowerBuff(&ret[0], static_cast<DWORD>(ret.length()));
 	return ret;
 }
 
 wstring str::ToUpper(wstring_view s)
 {
 	wstring ret = s.data();
-	CharUpperBuffW(&ret[0], static_cast<DWORD>(ret.length()));
+	CharUpperBuff(&ret[0], static_cast<DWORD>(ret.length()));
 	return ret;
 }
 
@@ -358,7 +358,7 @@ wstring& str::TrimNulls(wstring& s)
 	// When a wstring is initialized with any length, possibly to be used as a buffer,
 	// the string length may not match the size() method, after the operation.
 	// This function fixes this.
-	if (!s.empty()) s.resize(lstrlenW(s.c_str()));
+	if (!s.empty()) s.resize(lstrlen(s.c_str()));
 	return s;
 }
 

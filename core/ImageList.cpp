@@ -51,7 +51,7 @@ void ImageList::load(const Icon& ico) const
 
 void ImageList::loadIconResource(initializer_list<int> iconsIdx) const
 {
-	HINSTANCE hInst = GetModuleHandleW(nullptr);
+	HINSTANCE hInst = GetModuleHandle(nullptr);
 	SIZE icoRes = this->resolution();
 	for (int iconIdx : iconsIdx) {
 		this->load(Icon{iconIdx, icoRes, optional{hInst}});

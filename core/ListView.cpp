@@ -9,15 +9,15 @@ using std::optional;
 using std::system_error;
 using std::wstring_view;
 
-const ListView::Columns& ListView::Columns::add(std::wstring_view text, int size) const
+const ListView::Columns& ListView::Columns::add(wstring_view text, int size) const
 {
-	LVCOLUMNW lvc = {0};
+	LVCOLUMN lvc = {0};
 	lvc.mask = LVCF_TEXT | LVCF_WIDTH;
 	lvc.cx = size;
 	lvc.pszText = (LPWSTR)text.data();
 
-	if (SendMessageW(this->lv.hWnd(), LVM_INSERTCOLUMN, 0xffff, (LPARAM)&lvc) == -1) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_INSERTCOLUMN failed");
+	if (ListView_InsertColumn(this->lv.hWnd(), 0xffff, &lvc) == -1) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_InsertColumn failed");
 	}
 
 	return *this;
@@ -25,14 +25,14 @@ const ListView::Columns& ListView::Columns::add(std::wstring_view text, int size
 
 size_t ListView::Columns::count() const
 {
-	HWND hHeader = (HWND)SendMessageW(this->lv.hWnd(), LVM_GETHEADER, 0, 0);
+	HWND hHeader = ListView_GetHeader(this->lv.hWnd());
 	if (!hHeader) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_GETHEADER failed");
+		throw system_error(GetLastError(), std::system_category(), "ListView_GetHeader failed");
 	}
 
-	size_t count = (size_t)SendMessageW(hHeader, HDM_GETITEMCOUNT, 0, 0);
+	size_t count = Header_GetItemCount(hHeader);
 	if (count == -1) {
-		throw system_error(GetLastError(), std::system_category(), "HDM_GETITEMCOUNT failed");
+		throw system_error(GetLastError(), std::system_category(), "Header_GetItemCount failed");
 	}
 
 	return count;
@@ -51,34 +51,34 @@ void ListView::Columns::stretch(int index) const
 
 	RECT rc = {0};
 	GetClientRect(this->lv.hWnd(), &rc); // ListView client area
-	if (!SendMessageW(this->lv.hWnd(), LVM_SETCOLUMNWIDTH, index, (size_t)rc.right - cxUsed)) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_SETCOLUMNWIDTH failed");
+	if (!ListView_SetColumnWidth(this->lv.hWnd(), index, (size_t)rc.right - cxUsed)) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_SetColumnWidth failed");
 	}
 }
 
 size_t ListView::Columns::width(int index) const
 {
-	return (size_t)SendMessageW(this->lv.hWnd(), LVM_GETCOLUMNWIDTH, index, 0);
+	return ListView_GetColumnWidth(this->lv.hWnd(), index);
 }
 
 int ListView::Items::add(int iconIdx, initializer_list<wstring_view> texts) const
 {
-	LVITEMW lvi = {0};
+	LVITEM lvi = {0};
 	lvi.mask = LVIF_TEXT | (iconIdx == -1 ? 0 : LVIF_IMAGE);
 	lvi.iItem = 0x0fff'ffff; // insert as the last item
 	lvi.iImage = iconIdx;
 	lvi.pszText = (LPWSTR)texts.begin()->data();
 
-	int newIdx = (int)SendMessageW(this->lv.hWnd(), LVM_INSERTITEM, 0, (LPARAM)&lvi);
+	int newIdx = ListView_InsertItem(this->lv.hWnd(), &lvi);
 	if (newIdx == -1) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_INSERTITEM failed");
+		throw system_error(GetLastError(), std::system_category(), "ListView_InsertItem failed");
 	}
 
 	for (size_t i = 1; i < texts.size(); ++i) {
 		lvi.iSubItem = (int)i;
 		lvi.pszText = (LPWSTR)(texts.begin() + i)->data();
 
-		if (!SendMessageW(this->lv.hWnd(), LVM_SETITEMTEXT, newIdx, (LPARAM)&lvi)) {
+		if (!SendMessage(this->lv.hWnd(), LVM_SETITEMTEXT, newIdx, (LPARAM)&lvi)) {
 			throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMTEXT failed");
 		}
 	}
@@ -88,57 +88,96 @@ int ListView::Items::add(int iconIdx, initializer_list<wstring_view> texts) cons
 
 size_t ListView::Items::count() const
 {
-	return (size_t)SendMessageW(this->lv.hWnd(), LVM_GETITEMCOUNT, 0, 0);
+	return ListView_GetItemCount(this->lv.hWnd());
 }
 
 optional<int> ListView::Items::focused() const
 {
-	int idx = (int)SendMessageW(this->lv.hWnd(), LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+	int idx = ListView_GetNextItem(this->lv.hWnd(), -1, LVNI_FOCUSED);
 	return idx == -1 ? std::nullopt : optional{idx};
+}
+
+bool ListView::Items::isSelected(int index) const
+{
+	return (ListView_GetItemState(this->lv.hWnd(), index, LVIS_SELECTED)
+		& LVIS_SELECTED) != 0;
 }
 
 bool ListView::Items::isVisible(int index) const
 {
-	return SendMessageW(this->lv.hWnd(), LVM_ISITEMVISIBLE, index, 0) != 0;
+	return ListView_IsItemVisible(this->lv.hWnd(), index) != 0;
+}
+
+LPARAM ListView::Items::lParam(int index) const
+{
+	LVITEM lvi = {0};
+	lvi.iItem = index;
+	lvi.mask = LVIF_PARAM;
+
+	if (!ListView_GetItem(this->lv.hWnd(), &lvi)) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_GetItem failed");
+	}
+
+	return lvi.lParam;
 }
 
 RECT ListView::Items::rect(int index, int lvirPortion) const
 {
 	RECT rc = {0};
-	rc.left = lvirPortion;
-
-	if (!SendMessageW(this->lv.hWnd(), LVM_GETITEMRECT, index, (LPARAM)&rc)) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_GETITEMRECT failed");
+	if (!ListView_GetItemRect(this->lv.hWnd(), index, &rc, lvirPortion)) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_GetItemRect failed");
 	}
 	return rc;
 }
 
 void ListView::Items::remove(int index) const
 {
-	if (!SendMessageW(this->lv.hWnd(), LVM_DELETEITEM, index, 0)) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_DELETEITEM failed");
+	if (!ListView_DeleteItem(this->lv.hWnd(), index)) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_DeleteItem failed");
 	}
 }
 
 void ListView::Items::selectAll(bool doSelect) const
 {
-	LVITEMW lvi = {0};
+	LVITEM lvi = {0};
 	lvi.stateMask = LVIS_SELECTED;
 	lvi.state = doSelect ? LVIS_SELECTED : 0;
 
-	if (!SendMessageW(this->lv.hWnd(), LVM_SETITEMSTATE, -1, (LPARAM)&lvi)) {
+	if (!SendMessage(this->lv.hWnd(), LVM_SETITEMSTATE, -1, (LPARAM)&lvi)) {
 		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed.");
 	}
 }
 
 void ListView::Items::setFocused(int index) const
 {
-	LVITEMW lvi = {0};
+	LVITEM lvi = {0};
 	lvi.stateMask = LVIS_FOCUSED;
 	lvi.state = LVIS_FOCUSED;
 
-	if (SendMessageW(this->lv.hWnd(), LVM_SETITEMSTATE, index, (LPARAM)&lvi) == -1) {
+	if (!SendMessage(this->lv.hWnd(), LVM_SETITEMSTATE, index, (LPARAM)&lvi)) {
 		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed.");
+	}
+}
+
+void ListView::Items::setSelected(int index) const
+{
+	LVITEM lvi = {0};
+	lvi.stateMask = LVIS_SELECTED;
+	lvi.state = LVIS_SELECTED;
+
+	if (!SendMessage(this->lv.hWnd(), LVM_SETITEMSTATE, index, (LPARAM)&lvi)) {
+		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed.");
+	}
+}
+
+void ListView::Items::setText(int itemIndex, int columnIndex, wstring_view text) const
+{
+	LVITEM lvi = {0};
+	lvi.iSubItem = columnIndex;
+	lvi.pszText = (LPWSTR)text.data();
+
+	if (!SendMessage(this->lv.hWnd(), LVM_SETITEMTEXT, itemIndex, (LPARAM)&lvi)) {
+		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMTEXT failed");
 	}
 }
 
@@ -186,17 +225,29 @@ bool ListView::onWmNotify(LPARAM lp) const
 
 void ListView::setExtendedStyle(bool set, DWORD exStyles) const
 {
-	SendMessageW(this->hWnd(), LVM_SETEXTENDEDLISTVIEWSTYLE, exStyles, set ? exStyles : 0);
+	ListView_SetExtendedListViewStyleEx(this->hWnd(), exStyles, set ? exStyles : 0);
 }
 
 void ListView::setImageList(const ImageList& imgLst, DWORD normalOrSmall) const
 {
-	SendMessageW(this->hWnd(), LVM_SETIMAGELIST, normalOrSmall, (LPARAM)imgLst.hImageList());
+	ListView_SetImageList(this->hWnd(), imgLst.hImageList(), normalOrSmall);
 }
 
 void ListView::setRedraw(bool doRedraw) const
 {
-	SendMessageW(this->hWnd(), WM_SETREDRAW, (WPARAM)(BOOL)doRedraw, 0);
+	SendMessage(this->hWnd(), WM_SETREDRAW, (WPARAM)(BOOL)doRedraw, 0);
+}
+
+void ListView::setView(DWORD lvView) const
+{
+	if (ListView_SetView(this->hWnd(), lvView) == -1) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_SetView failed");
+	}
+}
+
+DWORD ListView::view() const
+{
+	return ListView_GetView(this->hWnd());
 }
 
 void ListView::showContextMenu(bool followCursor, bool hasCtrl, bool hasShift) const
@@ -210,7 +261,7 @@ void ListView::showContextMenu(bool followCursor, bool hasCtrl, bool hasShift) c
 		ScreenToClient(this->hWnd(), &menuPos); // now relative to list view
 
 		LVHITTESTINFO lvhti = {0};
-		SendMessageW(this->hWnd(), LVM_HITTEST, -1, (LPARAM)&lvhti);
+		SendMessage(this->hWnd(), LVM_HITTEST, -1, (LPARAM)&lvhti);
 
 		if (lvhti.iItem == -1) { // no item was right-clicked
 			this->items.selectAll(false);

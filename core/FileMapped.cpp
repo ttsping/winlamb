@@ -67,11 +67,11 @@ void FileMapped::resize(size_t newSize)
 
 void FileMapped::mapInMemory()
 {
-	if (!(this->hMap = CreateFileMappingW(this->file.handle(), nullptr,
+	if (!(this->hMap = CreateFileMapping(this->file.handle(), nullptr,
 		this->readOnly ? PAGE_READONLY : PAGE_READWRITE,
 		0, 0, nullptr)))
 	{
-		throw system_error(GetLastError(), std::system_category(), "CreateFileMappingW failed");
+		throw system_error(GetLastError(), std::system_category(), "CreateFileMapping failed");
 	}
 
 	if (!(this->pMem = MapViewOfFile(this->hMap,

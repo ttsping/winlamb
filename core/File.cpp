@@ -55,10 +55,10 @@ File::File(wstring_view filePath, Access access)
 		disposition = OPEN_ALWAYS;
 	}
 
-	if (!(this->hf = CreateFileW(filePath.data(), readWrite, share, nullptr,
+	if (!(this->hf = CreateFile(filePath.data(), readWrite, share, nullptr,
 		disposition, FILE_ATTRIBUTE_NORMAL, nullptr)))
 	{
-		throw system_error(GetLastError(), std::system_category(), "CreateFileW failed");
+		throw system_error(GetLastError(), std::system_category(), "CreateFile failed");
 	}
 }
 

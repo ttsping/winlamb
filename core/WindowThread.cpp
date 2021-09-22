@@ -19,7 +19,7 @@ static const UINT WM_UI_THREAD = WM_APP + 0x3fff;
 void WindowThread::runUiThread(function<void()> func) const
 {
 	ThreadPack* pPack = new ThreadPack{std::move(func)};
-	SendMessageW(this->hWnd(), WM_UI_THREAD, 0xdead'beef, (LPARAM)pPack);
+	SendMessage(this->hWnd(), WM_UI_THREAD, 0xdead'beef, (LPARAM)pPack);
 }
 
 void WindowThread::runDetachedThread(function<void()> func) const
@@ -34,7 +34,7 @@ void WindowThread::runDetachedThread(function<void()> func) const
 			pPack->func();
 		} catch (...) {
 			ThreadPack* pPackCrash = new ThreadPack{[]{}, pPack->hWnd, std::current_exception()};
-			SendMessageW(pPack->hWnd, WM_UI_THREAD, 0xdead'beef, (LPARAM)pPackCrash);
+			SendMessage(pPack->hWnd, WM_UI_THREAD, 0xdead'beef, (LPARAM)pPackCrash);
 		}
 		delete pPack;
 		_endthreadex(0); // http://www.codeproject.com/Articles/7732/A-class-to-synchronise-thread-completions/

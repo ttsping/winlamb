@@ -12,44 +12,44 @@ using std::system_error;
 
 void CustomControl::create(Window* parent, int x, int y, int cx, int cy)
 {
-	HINSTANCE hInst = (HINSTANCE)GetWindowLongPtrW(parent->hWnd(), GWLP_HINSTANCE);
+	HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(parent->hWnd(), GWLP_HINSTANCE);
 
-	WNDCLASSEXW wcx = {0};
-	wcx.cbSize = sizeof(WNDCLASSEXW);
+	WNDCLASSEX wcx = {0};
+	wcx.cbSize = sizeof(WNDCLASSEX);
 	wcx.lpfnWndProc = CustomControl::Proc;
 	wcx.hInstance = hInst;
 	wcx.style = this->classStyles;
-	wcx.hCursor = this->hCursor ? this->hCursor : LoadCursorW(nullptr, IDC_ARROW);
+	wcx.hCursor = this->hCursor ? this->hCursor : LoadCursor(nullptr, IDC_ARROW);
 	wcx.hbrBackground = this->hBrushBg ? this->hBrushBg : (HBRUSH)(COLOR_WINDOW + 1);
 
 	// After all fields are set, we generate a class name by hashing all fields.
 	wchar_t className[60] = {0};
-	wsprintfW(className, L"%Ix.%Ix.%Ix.%Ix.%Ix.%Ix.%Ix.%Ix.%Ix.%Ix",
+	wsprintf(className, L"%Ix.%Ix.%Ix.%Ix.%Ix.%Ix.%Ix.%Ix.%Ix.%Ix",
 		(UINT64)wcx.style, (UINT64)wcx.lpfnWndProc, (UINT64)wcx.cbClsExtra, (UINT64)wcx.cbWndExtra,
 		(UINT64)wcx.hInstance, (UINT64)wcx.hIcon, (UINT64)wcx.hCursor, (UINT64)wcx.hbrBackground,
 		(UINT64)wcx.lpszMenuName, (UINT64)wcx.hIconSm);
 
 	wcx.lpszClassName = className;
 
-	ATOM atom = RegisterClassExW(&wcx);
+	ATOM atom = RegisterClassEx(&wcx);
 	if (!atom) {
 		if (DWORD err = GetLastError(); err == ERROR_CLASS_ALREADY_EXISTS) {
 			// https://devblogs.microsoft.com/oldnewthing/20150429-00/?p=44984
 			// https://devblogs.microsoft.com/oldnewthing/20041011-00/?p=37603
 			// Retrieve atom from existing window class.
-			if (!(atom = GetClassInfoExW(hInst, className, &wcx))) {
-				throw system_error(GetLastError(), std::system_category(), "GetClassInfoExW failed");
+			if (!(atom = GetClassInfoEx(hInst, className, &wcx))) {
+				throw system_error(GetLastError(), std::system_category(), "GetClassInfoEx failed");
 			}
 		} else {
 			throw system_error(err, std::system_category(), "RegisterClassExW failed");
 		}
 	}
 
-	if (!CreateWindowExW(this->wndExStyles, MAKEINTATOM(atom), nullptr,
+	if (!CreateWindowEx(this->wndExStyles, MAKEINTATOM(atom), nullptr,
 		this->wndStyles, x, y, cx, cy, parent->hWnd(), (HMENU)(UINT64)this->ctlId,
 		hInst, (LPVOID)this)) // pass obj pointer to proc
 	{
-		throw system_error(GetLastError(), std::system_category(), "CreateWindowExW failed");
+		throw system_error(GetLastError(), std::system_category(), "CreateWindowEx failed");
 	}
 }
 
@@ -64,12 +64,12 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	CustomControl* pObj;
 
 	if (msg == WM_NCCREATE) {
-		CREATESTRUCTW* cs = (CREATESTRUCTW*)lp;
+		CREATESTRUCT* cs = (CREATESTRUCT*)lp;
 		pObj = (CustomControl*)cs->lpCreateParams;
 		pObj->hw = hWnd;
-		SetWindowLongPtrW(hWnd, GWLP_USERDATA, (LONG_PTR)pObj);
+		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pObj);
 	} else {
-		pObj = (CustomControl*)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
+		pObj = (CustomControl*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 	}
 
 	if (CustomControl::PaintThemeBorders(hWnd, msg, wp, lp)) return 0;
@@ -87,20 +87,20 @@ LRESULT CALLBACK CustomControl::Proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		if (msg == WM_NCDESTROY) {
 			pObj->hw = nullptr;
-			SetWindowLongPtrW(hWnd, GWLP_USERDATA, 0);
+			SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
 		}
 	}
 
-	return maybeRet ? *maybeRet : DefWindowProcW(hWnd, msg, wp, lp);
+	return maybeRet ? *maybeRet : DefWindowProc(hWnd, msg, wp, lp);
 }
 
 bool CustomControl::PaintThemeBorders(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	if (msg != WM_NCPAINT) return false;
 
-	DefWindowProcW(hWnd, WM_NCPAINT, wp, lp); // make system draw the scrollbar for us
+	DefWindowProc(hWnd, WM_NCPAINT, wp, lp); // make system draw the scrollbar for us
 
-	if (!(GetWindowLongPtrW(hWnd, GWL_EXSTYLE) & WS_EX_CLIENTEDGE) ||
+	if (!(GetWindowLongPtr(hWnd, GWL_EXSTYLE) & WS_EX_CLIENTEDGE) ||
 		!IsThemeActive() ||
 		!IsAppThemed()) return 0;
 

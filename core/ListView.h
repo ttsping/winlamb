@@ -37,11 +37,15 @@ public:
 		int add(int iconIdx, std::initializer_list<std::wstring_view> texts) const;
 		[[nodiscard]] size_t count() const;
 		std::optional<int> focused() const;
+		bool isSelected(int index) const;
 		bool isVisible(int index) const;
+		LPARAM lParam(int index) const;
 		RECT rect(int index, int lvirPortion = LVIR_BOUNDS) const;
 		void remove(int index) const;
 		void selectAll(bool doSelect) const;
 		void setFocused(int index) const;
+		void setSelected(int index) const;
+		void setText(int itemIndex, int columnIndex, std::wstring_view text) const;
 	};
 
 private:
@@ -67,6 +71,8 @@ public:
 	void setExtendedStyle(bool set, DWORD exStyle) const;
 	void setImageList(const ImageList& imgLst, DWORD normalOrSmall = LVSIL_NORMAL) const;
 	void setRedraw(bool doRedraw) const;
+	void setView(DWORD lvView) const;
+	DWORD view() const;
 
 private:
 	void showContextMenu(bool followCursor, bool hasCtrl, bool hasShift) const;

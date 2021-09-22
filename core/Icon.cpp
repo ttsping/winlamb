@@ -12,10 +12,10 @@ using std::wstring_view;
 Icon::Icon(int iconId, SIZE resolution, optional<HINSTANCE> hInst)
 	: hIco{nullptr}
 {
-	if (!(this->hIco = (HICON)LoadImageW(hInst ? *hInst : GetModuleHandleW(nullptr),
-		MAKEINTRESOURCEW(iconId), IMAGE_ICON, resolution.cx, resolution.cy, LR_DEFAULTCOLOR)))
+	if (!(this->hIco = (HICON)LoadImage(hInst ? *hInst : GetModuleHandle(nullptr),
+		MAKEINTRESOURCE(iconId), IMAGE_ICON, resolution.cx, resolution.cy, LR_DEFAULTCOLOR)))
 	{
-		throw system_error(GetLastError(), std::system_category(), "LoadImageW failed");
+		throw system_error(GetLastError(), std::system_category(), "LoadImage failed");
 	}
 }
 
@@ -41,14 +41,14 @@ Icon::Icon(wstring_view fileExtension, SIZE resolution)
 	}
 
 	wchar_t extens[16] = {0};
-	lstrcpyW(extens, (fileExtension[0] == L'.') ? L"*" : L"*."); // prepend dot if it doesn't have
-	lstrcatW(extens, fileExtension.data());
+	lstrcpy(extens, (fileExtension[0] == L'.') ? L"*" : L"*."); // prepend dot if it doesn't have
+	lstrcat(extens, fileExtension.data());
 
 	SHFILEINFO shfi = {0};
-	if (!SHGetFileInfoW(extens, FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi),
+	if (!SHGetFileInfo(extens, FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi),
 		SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX))
 	{
-		throw system_error(GetLastError(), std::system_category(), "SHGetFileInfoW failed");
+		throw system_error(GetLastError(), std::system_category(), "SHGetFileInfo failed");
 	}
 
 	if (!(this->hIco = ImageList_GetIcon(hilShell, shfi.iIcon, ILD_NORMAL))) {

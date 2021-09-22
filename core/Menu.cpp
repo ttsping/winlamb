@@ -8,10 +8,10 @@ using std::system_error;
 Menu::Menu(int menuId, optional<HINSTANCE> hInst)
 	: hm{nullptr}
 {
-	if (!(this->hm = LoadMenuW(hInst ? *hInst : GetModuleHandleW(nullptr),
-		MAKEINTRESOURCEW(menuId))))
+	if (!(this->hm = LoadMenu(hInst ? *hInst : GetModuleHandle(nullptr),
+		MAKEINTRESOURCE(menuId))))
 	{
-		throw system_error(GetLastError(), std::system_category(), "LoadMenuW failed");
+		throw system_error(GetLastError(), std::system_category(), "LoadMenu failed");
 	}
 }
 

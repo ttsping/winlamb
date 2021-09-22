@@ -23,8 +23,8 @@ Font& Font::operator=(HFONT hf)
 Font::Font(const LOGFONT& lf)
 	: hf{nullptr}
 {
-	if (!(this->hf = CreateFontIndirectW(&lf))) {
-		throw system_error(GetLastError(), std::system_category(), "CreateFontIndirectW failed");
+	if (!(this->hf = CreateFontIndirect(&lf))) {
+		throw system_error(GetLastError(), std::system_category(), "CreateFontIndirect failed");
 	}
 }
 
@@ -38,8 +38,8 @@ void Font::destroy()
 
 void Font::getObject(LOGFONT& lf) const
 {
-	if (!GetObjectW(this->hf, sizeof(LOGFONT), &lf)) {
-		throw system_error(GetLastError(), std::system_category(), "GetObjectW failed");
+	if (!GetObject(this->hf, sizeof(LOGFONT), &lf)) {
+		throw system_error(GetLastError(), std::system_category(), "GetObject failed");
 	}
 }
 
@@ -51,8 +51,8 @@ const Font& Font::UiFont()
 		NONCLIENTMETRICS ncm = {0};
 		ncm.cbSize = sizeof(ncm);
 		if (!IsWindowsVistaOrGreater()) ncm.cbSize -= sizeof(int);
-		if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0)) {
-			throw system_error(GetLastError(), std::system_category(), "SystemParametersInfoW failed");
+		if (!SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0)) {
+			throw system_error(GetLastError(), std::system_category(), "SystemParametersInfo failed");
 		}
 		globalUi = Font{ncm.lfMenuFont};
 	}
