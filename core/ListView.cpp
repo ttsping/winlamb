@@ -160,10 +160,11 @@ bool ListView::onWmNotify(LPARAM lp) const
 
 			if (hasCtrl && pNkd->wVKey == 'A') { // Ctrl+A pressed?
 				this->items.selectAll(true);
+				return true;
 			} else if (pNkd->wVKey == VK_APPS) { // context menu key
 				this->showContextMenu(false, hasCtrl, hasShift);
+				return true;
 			}
-			return true;
 
 		} else if (pNm->code == NM_RCLICK) {
 			const NMITEMACTIVATE* pNia = (const NMITEMACTIVATE*)lp;
