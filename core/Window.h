@@ -1,5 +1,7 @@
 
 #pragma once
+#include <string>
+#include <string_view>
 #include <Windows.h>
 
 namespace core {
@@ -24,8 +26,9 @@ public:
 	constexpr Window() : hw{nullptr} { }
 	explicit constexpr Window(HWND hWnd) : hw{hWnd} { }
 
-
 	[[nodiscard]] constexpr HWND hWnd() const { return this->hw; }
+	void setText(std::wstring_view text) const;
+	[[nodiscard]] std::wstring text() const;
 };
 
 }
