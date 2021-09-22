@@ -52,7 +52,7 @@ int MainDialog::loop(HWND hDlg, HACCEL hAccel)
 		}
 
 		HWND hTopLevel = GetAncestor(hDlg, GA_ROOT);
-		if (hAccel && !TranslateAcceleratorW(hTopLevel, hAccel, &msg)) {
+		if (hAccel && TranslateAcceleratorW(hTopLevel, hAccel, &msg)) {
 			continue; // message translated, no further processing is done
 		}
 
