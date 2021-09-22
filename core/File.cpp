@@ -30,6 +30,7 @@ void File::Lock::unlock()
 	}
 }
 
+
 File& File::operator=(File&& other)
 {
 	this->close();

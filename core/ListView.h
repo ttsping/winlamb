@@ -2,6 +2,7 @@
 #pragma once
 #include <optional>
 #include <string_view>
+#include <vector>
 #include "ImageList.h"
 #include "NativeControl.h"
 #include "Menu.h"
@@ -20,9 +21,12 @@ public:
 		constexpr Columns(const ListView& lv) : lv{lv} { }
 		Columns(const Columns&) = delete;
 	public:
-		const Columns& add(std::wstring_view text, int size) const;
+		void add(std::initializer_list<std::pair<std::wstring_view, int>> titlesAndSizes) const;
 		[[nodiscard]] size_t count() const;
+		void setTitle(int index, std::wstring_view text) const;
+		void setWidth(int index, size_t width) const;
 		void stretch(int index) const;
+		[[nodiscard]] std::wstring title(int index) const;
 		[[nodiscard]] size_t width(int index) const;
 	};
 
@@ -34,18 +38,28 @@ public:
 		constexpr Items(const ListView& lv) : lv{lv} { }
 		Items(const Items&) = delete;
 	public:
-		int add(int iconIdx, std::initializer_list<std::wstring_view> texts) const;
+		int add(std::initializer_list<std::wstring_view> texts) const { return this->add(-1, texts); }
+		int add(int iconIndex, std::initializer_list<std::wstring_view> texts) const;
 		[[nodiscard]] size_t count() const;
-		std::optional<int> focused() const;
-		bool isSelected(int index) const;
-		bool isVisible(int index) const;
-		LPARAM lParam(int index) const;
-		RECT rect(int index, int lvirPortion = LVIR_BOUNDS) const;
+		void ensureVisible(int index) const;
+		[[nodiscard]] std::optional<int> find(std::wstring_view caseInsensText) const;
+		[[nodiscard]] std::optional<int> focused() const;
+		[[nodiscard]] int iconIndex(int itemIndex) const;
+		[[nodiscard]] bool isSelected(int index) const;
+		[[nodiscard]] bool isVisible(int index) const;
+		[[nodiscard]] LPARAM lParam(int index) const;
+		[[nodiscard]] RECT rect(int index, int lvirPortion = LVIR_BOUNDS) const;
 		void remove(int index) const;
+		void removeAll() const;
 		void selectAll(bool doSelect) const;
+		[[nodiscard]] std::vector<int> selected() const;
+		[[nodiscard]] size_t selectedCount() const;
 		void setFocused(int index) const;
-		void setSelected(int index) const;
+		void setIconIndex(int itemIndex, int iconIndex) const;
+		void setLParam(int index, LPARAM lp) const;
+		void setSelected(const std::vector<int>& indexes) const;
 		void setText(int itemIndex, int columnIndex, std::wstring_view text) const;
+		[[nodiscard]] std::wstring text(int itemIndex, int columnIndex) const;
 	};
 
 private:
@@ -66,13 +80,13 @@ public:
 		: NativeControl{hParent, ctrlId}, contextMenu{contextMenu},
 			columns{*this}, items{*this} { }
 
-	int ctrlId() const;
+	[[nodiscard]] int ctrlId() const;
 	bool onWmNotify(LPARAM lp) const;
 	void setExtendedStyle(bool set, DWORD exStyle) const;
 	void setImageList(const ImageList& imgLst, DWORD normalOrSmall = LVSIL_NORMAL) const;
 	void setRedraw(bool doRedraw) const;
 	void setView(DWORD lvView) const;
-	DWORD view() const;
+	[[nodiscard]] DWORD view() const;
 
 private:
 	void showContextMenu(bool followCursor, bool hasCtrl, bool hasShift) const;

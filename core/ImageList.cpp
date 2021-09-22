@@ -61,7 +61,7 @@ void ImageList::loadIconResource(initializer_list<int> iconsIdx) const
 void ImageList::loadShellIcon(initializer_list<wstring_view> fileExtensions) const
 {
 	SIZE icoRes = this->resolution();
-	for (wstring_view fileExtension : fileExtensions) {
+	for (const wstring_view& fileExtension : fileExtensions) {
 		this->load(Icon{fileExtension, icoRes});
 	}
 }

@@ -150,12 +150,12 @@ wstring str::Parse(span<const BYTE> src)
 	case Encoding::ASCII:   return _ParseAscii(span{(const char*)src.data(), src.size()});
 	case Encoding::WIN1252: return _ParseCodePage(src, 1252);
 	case Encoding::UTF8:    return _ParseCodePage(src, CP_UTF8);
-	case Encoding::UTF16BE: throw invalid_argument("UTF-16 big endian: encoding not implemented.");
-	case Encoding::UTF16LE: throw invalid_argument("UTF-16 little endian: encoding not implemented.");
-	case Encoding::UTF32BE: throw invalid_argument("UTF-32 big endian: encoding not implemented.");
-	case Encoding::UTF32LE: throw invalid_argument("UTF-32 little endian: encoding not implemented.");
-	case Encoding::SCSU:    throw invalid_argument("Standard compression scheme for Unicode: encoding not implemented.");
-	case Encoding::BOCU1:   throw invalid_argument("Binary ordered compression for Unicode: encoding not implemented.");
+	case Encoding::UTF16BE: throw invalid_argument("UTF-16 big endian: encoding not implemented");
+	case Encoding::UTF16LE: throw invalid_argument("UTF-16 little endian: encoding not implemented");
+	case Encoding::UTF32BE: throw invalid_argument("UTF-32 big endian: encoding not implemented");
+	case Encoding::UTF32LE: throw invalid_argument("UTF-32 little endian: encoding not implemented");
+	case Encoding::SCSU:    throw invalid_argument("Standard compression scheme for Unicode: encoding not implemented");
+	case Encoding::BOCU1:   throw invalid_argument("Binary ordered compression for Unicode: encoding not implemented");
 	default:                throw invalid_argument("Unknown encoding.");
 	}
 }

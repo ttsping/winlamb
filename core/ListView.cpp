@@ -2,25 +2,30 @@
 #include <system_error>
 #include "ListView.h"
 #include "Menu.h"
+#include "str.h"
 #include <CommCtrl.h>
 using namespace core;
 using std::initializer_list;
 using std::optional;
+using std::pair;
 using std::system_error;
+using std::vector;
+using std::wstring;
 using std::wstring_view;
 
-const ListView::Columns& ListView::Columns::add(wstring_view text, int size) const
+void ListView::Columns::add(initializer_list<pair<wstring_view, int>> titlesAndSizes) const
 {
 	LVCOLUMN lvc = {0};
 	lvc.mask = LVCF_TEXT | LVCF_WIDTH;
-	lvc.cx = size;
-	lvc.pszText = (LPWSTR)text.data();
 
-	if (ListView_InsertColumn(this->lv.hWnd(), 0xffff, &lvc) == -1) {
-		throw system_error(GetLastError(), std::system_category(), "ListView_InsertColumn failed");
+	for (const pair<wstring_view, int>& titleAndSize : titlesAndSizes) {
+		lvc.cx = titleAndSize.second;
+		lvc.pszText = (LPWSTR)titleAndSize.first.data();
+
+		if (ListView_InsertColumn(this->lv.hWnd(), 0xffff, &lvc) == -1) {
+			throw system_error(GetLastError(), std::system_category(), "ListView_InsertColumn failed");
+		}
 	}
-
-	return *this;
 }
 
 size_t ListView::Columns::count() const
@@ -38,6 +43,24 @@ size_t ListView::Columns::count() const
 	return count;
 }
 
+void ListView::Columns::setTitle(int index, wstring_view text) const
+{
+	LVCOLUMN lvc = {0};
+	lvc.mask = LVCF_TEXT;
+	lvc.pszText = (LPWSTR)text.data();
+
+	if (!ListView_SetColumn(this->lv.hWnd(), index, &lvc)) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_SetColumn failed");
+	}
+}
+
+void ListView::Columns::setWidth(int index, size_t width) const
+{
+	if (!ListView_SetColumnWidth(this->lv.hWnd(), index, width)) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_SetColumnWidth failed");
+	}
+}
+
 void ListView::Columns::stretch(int index) const
 {
 	int numCols = (int)this->count();
@@ -51,9 +74,23 @@ void ListView::Columns::stretch(int index) const
 
 	RECT rc = {0};
 	GetClientRect(this->lv.hWnd(), &rc); // ListView client area
-	if (!ListView_SetColumnWidth(this->lv.hWnd(), index, (size_t)rc.right - cxUsed)) {
-		throw system_error(GetLastError(), std::system_category(), "ListView_SetColumnWidth failed");
+	this->setWidth(index, rc.right - cxUsed);
+}
+
+wstring ListView::Columns::title(int index) const
+{
+	wchar_t buf[64] = {0}; // arbitrary
+
+	LVCOLUMN lvc = {0};
+	lvc.mask = LVCF_TEXT;
+	lvc.pszText = buf;
+	lvc.cchTextMax = ARRAYSIZE(buf);
+
+	if (!ListView_GetColumn(this->lv.hWnd(), index, &lvc)) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_GetColumn failed");
 	}
+
+	return wstring{buf};
 }
 
 size_t ListView::Columns::width(int index) const
@@ -61,12 +98,13 @@ size_t ListView::Columns::width(int index) const
 	return ListView_GetColumnWidth(this->lv.hWnd(), index);
 }
 
-int ListView::Items::add(int iconIdx, initializer_list<wstring_view> texts) const
+
+int ListView::Items::add(int iconIndex, initializer_list<wstring_view> texts) const
 {
 	LVITEM lvi = {0};
-	lvi.mask = LVIF_TEXT | (iconIdx == -1 ? 0 : LVIF_IMAGE);
+	lvi.mask = LVIF_TEXT | (iconIndex == -1 ? 0 : LVIF_IMAGE);
 	lvi.iItem = 0x0fff'ffff; // insert as the last item
-	lvi.iImage = iconIdx;
+	lvi.iImage = iconIndex;
 	lvi.pszText = (LPWSTR)texts.begin()->data();
 
 	int newIdx = ListView_InsertItem(this->lv.hWnd(), &lvi);
@@ -91,10 +129,62 @@ size_t ListView::Items::count() const
 	return ListView_GetItemCount(this->lv.hWnd());
 }
 
+void ListView::Items::ensureVisible(int index) const
+{
+	if (this->lv.view() == LV_VIEW_DETAILS) {
+		// In details view, ListView_EnsureVisible() won't center the item vertically.
+		// This new implementation does it.
+		RECT rc = this->rect(index);
+		int cyList = rc.bottom; // total height of list
+
+		rc = {0};
+		LVITEMINDEX lvii = {0};
+		lvii.iItem = ListView_GetTopIndex(this->lv.hWnd()); // 1st visible item
+		ListView_GetItemIndexRect(this->lv.hWnd(), &lvii, 0, LVIR_BOUNDS, &rc);
+		int cyItem = rc.bottom - rc.top; // height of a single item
+		int xTop = rc.top; // topmost X of 1st visible item
+
+		rc = {0};
+		lvii = {0};
+		lvii.iItem = index;
+		ListView_GetItemIndexRect(this->lv.hWnd(), &lvii, 0, LVIR_BOUNDS, &rc);
+		int xUs = rc.top; // our current X
+
+		if (xUs < xTop || xUs > xTop + cyList) { // if we're not visible
+			ListView_Scroll(this->lv.hWnd(), 0, xUs - xTop - cyList / 2 + cyItem * 2);
+		}
+	} else {
+		ListView_EnsureVisible(this->lv.hWnd(), index, FALSE);
+	}
+}
+
+optional<int> ListView::Items::find(wstring_view caseInsensText) const
+{
+	LVFINDINFO lvfi = {0};
+	lvfi.flags = LVFI_STRING;
+	lvfi.psz = caseInsensText.data();
+
+	int idx = ListView_FindItem(this->lv.hWnd(), -1, &lvfi);
+	return idx == -1 ? std::nullopt : optional{idx};
+}
+
 optional<int> ListView::Items::focused() const
 {
 	int idx = ListView_GetNextItem(this->lv.hWnd(), -1, LVNI_FOCUSED);
 	return idx == -1 ? std::nullopt : optional{idx};
+}
+
+int ListView::Items::iconIndex(int itemIndex) const
+{
+	LVITEM lvi = {0};
+	lvi.iItem = itemIndex;
+	lvi.mask = LVIF_IMAGE;
+
+	if (!ListView_GetItem(this->lv.hWnd(), &lvi)) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_GetItem failed");
+	}
+
+	return lvi.iImage;
 }
 
 bool ListView::Items::isSelected(int index) const
@@ -130,6 +220,13 @@ RECT ListView::Items::rect(int index, int lvirPortion) const
 	return rc;
 }
 
+void ListView::Items::removeAll() const
+{
+	if (!ListView_DeleteAllItems(this->lv.hWnd())) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_DeleteAllItems	 failed");
+	}
+}
+
 void ListView::Items::remove(int index) const
 {
 	if (!ListView_DeleteItem(this->lv.hWnd(), index)) {
@@ -144,8 +241,27 @@ void ListView::Items::selectAll(bool doSelect) const
 	lvi.state = doSelect ? LVIS_SELECTED : 0;
 
 	if (!SendMessage(this->lv.hWnd(), LVM_SETITEMSTATE, -1, (LPARAM)&lvi)) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed.");
+		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed");
 	}
+}
+
+vector<int> ListView::Items::selected() const
+{
+	vector<int> items;
+	items.reserve(this->selectedCount());
+
+	int idxBase = -1;
+	for (;;) {
+		idxBase = ListView_GetNextItem(this->lv.hWnd(), idxBase, LVNI_SELECTED);
+		if (idxBase == -1) break;
+		items.emplace_back(idxBase);
+	}
+	return items;
+}
+
+size_t ListView::Items::selectedCount() const
+{
+	return ListView_GetSelectedCount(this->lv.hWnd());
 }
 
 void ListView::Items::setFocused(int index) const
@@ -155,18 +271,44 @@ void ListView::Items::setFocused(int index) const
 	lvi.state = LVIS_FOCUSED;
 
 	if (!SendMessage(this->lv.hWnd(), LVM_SETITEMSTATE, index, (LPARAM)&lvi)) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed.");
+		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed");
 	}
 }
 
-void ListView::Items::setSelected(int index) const
+void ListView::Items::setIconIndex(int itemIndex, int iconIndex) const
+{
+	LVITEM lvi = {0};
+	lvi.iItem = itemIndex;
+	lvi.mask = LVIF_IMAGE;
+	lvi.iImage = iconIndex;
+
+	if (!ListView_SetItem(this->lv.hWnd(), &lvi)) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_SetItem failed");
+	}
+}
+
+void ListView::Items::setLParam(int index, LPARAM lp) const
+{
+	LVITEM lvi = {0};
+	lvi.iItem = index;
+	lvi.mask = LVIF_PARAM;
+	lvi.lParam = lp;
+
+	if (!ListView_SetItem(this->lv.hWnd(), &lvi)) {
+		throw system_error(GetLastError(), std::system_category(), "ListView_SetItem failed");
+	}
+}
+
+void ListView::Items::setSelected(const vector<int>& indexes) const
 {
 	LVITEM lvi = {0};
 	lvi.stateMask = LVIS_SELECTED;
 	lvi.state = LVIS_SELECTED;
 
-	if (!SendMessage(this->lv.hWnd(), LVM_SETITEMSTATE, index, (LPARAM)&lvi)) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed.");
+	for (int index : indexes) {
+		if (!SendMessage(this->lv.hWnd(), LVM_SETITEMSTATE, index, (LPARAM)&lvi)) {
+			throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed");
+		}
 	}
 }
 
@@ -180,6 +322,36 @@ void ListView::Items::setText(int itemIndex, int columnIndex, wstring_view text)
 		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMTEXT failed");
 	}
 }
+
+wstring ListView::Items::text(int itemIndex, int columnIndex) const
+{
+	// http://forums.codeguru.com/showthread.php?351972-Getting-listView-item-text-length
+	LVITEM lvi = {0};
+	lvi.iItem = itemIndex;
+	lvi.iSubItem = columnIndex;
+
+	// Notice that, since strings' size always increase, if the buffer
+	// was previously allocated with a value bigger than our 1st step,
+	// this will speed up the size checks.
+
+	const int BLOCK_SZ = 64; // arbitrary
+	std::wstring buf(BLOCK_SZ, L'\0'); // speed-up 1st allocation
+	int baseBufLen = 0;
+	int charsWrittenWithoutNull = 0;
+
+	do {
+		baseBufLen += BLOCK_SZ; // increase buffer size
+		buf.resize(baseBufLen);
+		lvi.cchTextMax = baseBufLen;
+		lvi.pszText = &buf[0];
+		charsWrittenWithoutNull = (int)SendMessage(
+			this->lv.hWnd(), LVM_GETITEMTEXT, itemIndex, (LPARAM)&lvi);
+	} while (charsWrittenWithoutNull == baseBufLen - 1); // to break, must have at least 1 char gap
+
+	str::TrimNulls(buf);
+	return buf;
+}
+
 
 ListView& ListView::operator=(const ListView& other)
 {
