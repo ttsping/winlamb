@@ -21,9 +21,9 @@ public:
 		Lock(const File& file, size_t offset, size_t numBytes);
 	public:
 		~Lock() { this->unlock(); }
-		void unlock() noexcept;
-		[[nodiscard]] constexpr size_t offset() const { return this->off; }
 		[[nodiscard]] constexpr size_t numBytes() const { return this->sz; }
+		[[nodiscard]] constexpr size_t offset() const { return this->off; }
+		void unlock();
 	};
 
 private:
@@ -32,21 +32,21 @@ private:
 public:
 	~File() { this->close(); }
 
-	constexpr File(File&& other) noexcept : hf{nullptr} { std::swap(this->hf, other.hf); }
-	File& operator=(File&& other) noexcept;
+	constexpr File(File&& other) : hf{nullptr} { std::swap(this->hf, other.hf); }
+	File& operator=(File&& other);
 
 	File(std::wstring_view filePath, Access access);
 
-	void close() noexcept;
-	[[nodiscard]] constexpr HANDLE handle() const noexcept { return this->hf; }
-	[[nodiscard]] Lock lock(size_t offset, size_t numBytes) const { return Lock(*this, offset, numBytes); }
-	[[nodiscard]] INT64 offsetPtr() const;
-	void offsetPtrRewind() const;
-	[[nodiscard]] size_t size() const;
-	void resize(size_t newSize) const;
-	[[nodiscard]] std::vector<BYTE> readAll() const;
-	void write(std::span<const BYTE> bytes) const;
+	void close();
 	void eraseAndWrite(std::span<const BYTE> bytes) const;
+	[[nodiscard]] constexpr HANDLE handle() const { return this->hf; }
+	[[nodiscard]] Lock lock(size_t offset, size_t numBytes) const { return Lock(*this, offset, numBytes); }
+	[[nodiscard]] size_t offsetPtr() const;
+	void offsetPtrRewind() const;
+	[[nodiscard]] std::vector<BYTE> readAll() const;
+	void resize(size_t newSize) const;
+	[[nodiscard]] size_t size() const;
+	void write(std::span<const BYTE> bytes) const;
 };
 
 }

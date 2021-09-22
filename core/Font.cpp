@@ -6,14 +6,14 @@
 using namespace core;
 using std::system_error;
 
-Font& Font::operator=(Font&& other) noexcept
+Font& Font::operator=(Font&& other)
 {
 	this->destroy();
 	std::swap(this->hf, other.hf);
 	return *this;
 }
 
-Font& Font::operator=(HFONT hf) noexcept
+Font& Font::operator=(HFONT hf)
 {
 	this->destroy();
 	this->hf = hf;
@@ -28,7 +28,7 @@ Font::Font(const LOGFONT& lf)
 	}
 }
 
-void Font::destroy() noexcept
+void Font::destroy()
 {
 	if (this->hf) {
 		DeleteObject(this->hf);

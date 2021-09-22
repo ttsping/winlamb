@@ -6,7 +6,7 @@
 using namespace core;
 using std::optional;
 
-INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) noexcept
+INT_PTR CALLBACK Dialog::Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
 	Dialog* pObj;
 

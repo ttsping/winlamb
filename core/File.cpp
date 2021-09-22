@@ -9,19 +9,32 @@ using std::system_error;
 using std::vector;
 using std::wstring_view;
 
-File& File::operator=(File&& other) noexcept
+File::Lock::Lock(const File& file, size_t offset, size_t numBytes)
+	: file{file}, off{offset}, sz{numBytes}
+{
+	if (!LockFile(this->file.handle(),
+		core_internals::Lo64(this->off), core_internals::Hi64(this->off),
+		core_internals::Lo64(this->sz), core_internals::Hi64(this->sz)))
+	{
+		throw system_error(GetLastError(), std::system_category(), "LockFile failed");
+	}
+}
+
+void File::Lock::unlock()
+{
+	if (this->off && this->sz) {
+		UnlockFile(this->file.handle(),
+			core_internals::Lo64(this->off), core_internals::Hi64(this->off),
+			core_internals::Lo64(this->sz), core_internals::Hi64(this->sz));
+		this->off = this->sz = 0;
+	}
+}
+
+File& File::operator=(File&& other)
 {
 	this->close();
 	std::swap(this->hf, other.hf);
 	return *this;
-}
-
-void File::close() noexcept
-{
-	if (this->hf) {
-		CloseHandle(this->hf);
-		this->hf = nullptr;
-	}
 }
 
 File::File(wstring_view filePath, Access access)
@@ -49,9 +62,24 @@ File::File(wstring_view filePath, Access access)
 	}
 }
 
-INT64 File::offsetPtr() const
+void File::close()
 {
-	INT64 offset = (INT64)SetFilePointerEx(this->hf, {0}, nullptr, FILE_CURRENT);
+	if (this->hf) {
+		CloseHandle(this->hf);
+		this->hf = nullptr;
+	}
+}
+
+void File::eraseAndWrite(span<const BYTE> bytes) const
+{
+	this->resize(bytes.size());
+	this->write(bytes);
+	this->offsetPtrRewind();
+}
+
+size_t File::offsetPtr() const
+{
+	size_t offset = (size_t)SetFilePointerEx(this->hf, {0}, nullptr, FILE_CURRENT);
 	if (!offset) {
 		if (DWORD err = GetLastError(); err != ERROR_SUCCESS) {
 			throw system_error(GetLastError(), std::system_category(), "SetFilePointerEx failed");
@@ -69,13 +97,18 @@ void File::offsetPtrRewind() const
 	}
 }
 
-size_t File::size() const
+vector<BYTE> File::readAll() const
 {
-	LARGE_INTEGER li = {0};
-	if (!GetFileSizeEx(this->hf, &li)) {
-		throw system_error(GetLastError(), std::system_category(), "GetFileSizeEx failed");
+	this->offsetPtrRewind();
+	size_t len = this->size();
+	vector<BYTE> buf(len, 0x00); // alloc buffer
+	DWORD numRead = 0;
+
+	if (!ReadFile(this->hf, &buf[0], (DWORD)len, &numRead, nullptr)) {
+		throw system_error(GetLastError(), std::system_category(), "ReadFile failed");
 	}
-	return (size_t)li.QuadPart;
+	this->offsetPtrRewind();
+	return buf;
 }
 
 void File::resize(size_t newSize) const
@@ -96,18 +129,13 @@ void File::resize(size_t newSize) const
 	this->offsetPtrRewind();
 }
 
-vector<BYTE> File::readAll() const
+size_t File::size() const
 {
-	this->offsetPtrRewind();
-	size_t len = this->size();
-	vector<BYTE> buf(len, 0x00); // alloc buffer
-	DWORD numRead = 0;
-
-	if (!ReadFile(this->hf, &buf[0], (DWORD)len, &numRead, nullptr)) {
-		throw system_error(GetLastError(), std::system_category(), "ReadFile failed");
+	LARGE_INTEGER li = {0};
+	if (!GetFileSizeEx(this->hf, &li)) {
+		throw system_error(GetLastError(), std::system_category(), "GetFileSizeEx failed");
 	}
-	this->offsetPtrRewind();
-	return buf;
+	return (size_t)li.QuadPart;
 }
 
 void File::write(span<const BYTE> bytes) const
@@ -115,33 +143,5 @@ void File::write(span<const BYTE> bytes) const
 	DWORD written = 0;
 	if (!WriteFile(this->hf, bytes.data(), (DWORD)bytes.size(), &written, nullptr)) {
 		throw system_error(GetLastError(), std::system_category(), "WriteFile failed");
-	}
-}
-
-void File::eraseAndWrite(span<const BYTE> bytes) const
-{
-	this->resize(bytes.size());
-	this->write(bytes);
-	this->offsetPtrRewind();
-}
-
-File::Lock::Lock(const File& file, size_t offset, size_t numBytes)
-	: file{file}, off{offset}, sz{numBytes}
-{
-	if (!LockFile(this->file.handle(),
-		core_internals::Lo64(this->off), core_internals::Hi64(this->off),
-		core_internals::Lo64(this->sz), core_internals::Hi64(this->sz)))
-	{
-		throw system_error(GetLastError(), std::system_category(), "LockFile failed");
-	}
-}
-
-void File::Lock::unlock() noexcept
-{
-	if (this->off && this->sz) {
-		UnlockFile(this->file.handle(),
-			core_internals::Lo64(this->off), core_internals::Hi64(this->off),
-			core_internals::Lo64(this->sz), core_internals::Hi64(this->sz));
-		this->off = this->sz = 0;
 	}
 }

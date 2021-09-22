@@ -6,7 +6,7 @@
 using std::tuple;
 using std::wstring;
 
-int core_internals::Lippincott() noexcept
+int core_internals::Lippincott()
 {
 	using core::str::ToWide;
 

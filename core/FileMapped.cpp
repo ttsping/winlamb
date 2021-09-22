@@ -7,7 +7,7 @@ using std::system_error;
 using std::vector;
 using std::wstring_view;
 
-constexpr FileMapped::FileMapped(FileMapped&& other) noexcept
+constexpr FileMapped::FileMapped(FileMapped&& other)
 	: file{std::move(other.file)}, hMap{nullptr}, pMem{nullptr}, sz{0}, readOnly{true}
 {
 	std::swap(this->hMap, other.hMap);
@@ -16,7 +16,7 @@ constexpr FileMapped::FileMapped(FileMapped&& other) noexcept
 	std::swap(this->readOnly, other.readOnly);
 }
 
-FileMapped& FileMapped::operator=(FileMapped&& other) noexcept
+FileMapped& FileMapped::operator=(FileMapped&& other)
 {
 	this->close();
 	this->file = std::move(other.file);
@@ -34,7 +34,7 @@ FileMapped::FileMapped(wstring_view filePath, Access access)
 	this->mapInMemory();
 }
 
-void FileMapped::close() noexcept
+void FileMapped::close()
 {
 	if (this->pMem) {
 		UnmapViewOfFile(this->pMem);
@@ -47,6 +47,14 @@ void FileMapped::close() noexcept
 	this->file.close();
 	this->sz = 0;
 	this->readOnly = false;
+}
+
+vector<BYTE> FileMapped::readChunk(size_t offset, size_t numBytes) const
+{
+	span<const BYTE> slice = this->hotSpan();
+	vector<BYTE> buf(slice.size(), 0x00); // alloc buffer
+	memcpy(&buf[0], slice.data(), sizeof(BYTE) * slice.size());
+	return buf;
 }
 
 void FileMapped::resize(size_t newSize)
@@ -73,12 +81,4 @@ void FileMapped::mapInMemory()
 	}
 
 	this->sz = this->file.size(); // cache file size
-}
-
-vector<BYTE> FileMapped::readChunk(size_t offset, size_t numBytes) const
-{
-	span<const BYTE> slice = this->hotSpan();
-	vector<BYTE> buf(slice.size(), 0x00); // alloc buffer
-	memcpy(&buf[0], slice.data(), sizeof(BYTE) * slice.size());
-	return buf;
 }

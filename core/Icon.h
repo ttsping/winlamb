@@ -13,17 +13,17 @@ private:
 	HICON hIco;
 
 public:
-	constexpr Icon(const Icon& other) noexcept : hIco{other.hIco} { }
-	constexpr Icon& operator=(const Icon& other) noexcept { this->hIco = other.hIco; return *this; }
+	constexpr Icon(const Icon& other) : hIco{other.hIco} { }
+	constexpr Icon& operator=(const Icon& other) { this->hIco = other.hIco; return *this; }
 
-	explicit constexpr Icon(HICON hIco) noexcept : hIco{hIco} { }
-	constexpr Icon& operator=(HICON hIco) noexcept { this->hIco = hIco; return *this; }
+	explicit constexpr Icon(HICON hIco) : hIco{hIco} { }
+	constexpr Icon& operator=(HICON hIco) { this->hIco = hIco; return *this; }
 
 	Icon(int iconId, SIZE resolution, std::optional<HINSTANCE> hInst = std::nullopt);
 	Icon(std::wstring_view fileExtension, SIZE resolution);
 
-	void destroy() noexcept;
-	[[nodiscard]] constexpr HICON hIcon() const noexcept { return this->hIco; }
+	void destroy();
+	[[nodiscard]] constexpr HICON hIcon() const { return this->hIco; }
 };
 
 }

@@ -7,14 +7,14 @@ using std::optional;
 using std::system_error;
 using std::wstring_view;
 
-ImageList& ImageList::operator=(ImageList&& other) noexcept
+ImageList& ImageList::operator=(ImageList&& other)
 {
 	this->destroy();
 	std::swap(this->hil, other.hil);
 	return *this;
 }
 
-ImageList& ImageList::operator=(HIMAGELIST hil) noexcept
+ImageList& ImageList::operator=(HIMAGELIST hil)
 {
 	this->destroy();
 	this->hil = hil;
@@ -29,26 +29,17 @@ ImageList::ImageList(SIZE resolution, UINT initialSize, DWORD ilcFlags)
 	}
 }
 
-void ImageList::destroy() noexcept
+size_t ImageList::count() const
+{
+	return ImageList_GetImageCount(this->hil);
+}
+
+void ImageList::destroy()
 {
 	if (this->hil) {
 		ImageList_Destroy(this->hil);
 		this->hil = nullptr;
 	}
-}
-
-size_t ImageList::count() const noexcept
-{
-	return ImageList_GetImageCount(this->hil);
-}
-
-SIZE ImageList::resolution() const
-{
-	int cx = 0, cy = 0;
-	if (!ImageList_GetIconSize(this->hil, &cx, &cy)) {
-		throw system_error(GetLastError(), std::system_category(), "ImageList_GetIconSize failed");
-	}
-	return SIZE{cx, cy};
 }
 
 void ImageList::load(const Icon& ico) const
@@ -73,4 +64,13 @@ void ImageList::loadShellIcon(initializer_list<wstring_view> fileExtensions) con
 	for (wstring_view fileExtension : fileExtensions) {
 		this->load(Icon{fileExtension, icoRes});
 	}
+}
+
+SIZE ImageList::resolution() const
+{
+	int cx = 0, cy = 0;
+	if (!ImageList_GetIconSize(this->hil, &cx, &cy)) {
+		throw system_error(GetLastError(), std::system_category(), "ImageList_GetIconSize failed");
+	}
+	return SIZE{cx, cy};
 }

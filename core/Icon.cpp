@@ -56,7 +56,7 @@ Icon::Icon(wstring_view fileExtension, SIZE resolution)
 	}
 }
 
-void Icon::destroy() noexcept
+void Icon::destroy()
 {
 	if (this->hIco) {
 		DestroyIcon(this->hIco);

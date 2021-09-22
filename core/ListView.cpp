@@ -9,6 +9,20 @@ using std::optional;
 using std::system_error;
 using std::wstring_view;
 
+const ListView::Columns& ListView::Columns::add(std::wstring_view text, int size) const
+{
+	LVCOLUMNW lvc = {0};
+	lvc.mask = LVCF_TEXT | LVCF_WIDTH;
+	lvc.cx = size;
+	lvc.pszText = (LPWSTR)text.data();
+
+	if (SendMessageW(this->lv.hWnd(), LVM_INSERTCOLUMN, 0xffff, (LPARAM)&lvc) == -1) {
+		throw system_error(GetLastError(), std::system_category(), "LVM_INSERTCOLUMN failed");
+	}
+
+	return *this;
+}
+
 size_t ListView::Columns::count() const
 {
 	HWND hHeader = (HWND)SendMessageW(this->lv.hWnd(), LVM_GETHEADER, 0, 0);
@@ -22,20 +36,6 @@ size_t ListView::Columns::count() const
 	}
 
 	return count;
-}
-
-const ListView::Columns& ListView::Columns::add(std::wstring_view text, int size) const
-{
-	LVCOLUMNW lvc = {0};
-	lvc.mask = LVCF_TEXT | LVCF_WIDTH;
-	lvc.cx = size;
-	lvc.pszText = (LPWSTR)text.data();
-
-	if (SendMessageW(this->lv.hWnd(), LVM_INSERTCOLUMN, 0xffff, (LPARAM)&lvc) == -1) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_INSERTCOLUMN failed");
-	}
-
-	return *this;
 }
 
 void ListView::Columns::stretch(int index) const
@@ -61,12 +61,7 @@ size_t ListView::Columns::width(int index) const
 	return (size_t)SendMessageW(this->lv.hWnd(), LVM_GETCOLUMNWIDTH, index, 0);
 }
 
-size_t ListView::Items::count() const
-{
-	return (size_t)SendMessageW(this->lv.hWnd(), LVM_GETITEMCOUNT, 0, 0);
-}
-
-UINT ListView::Items::add(int iconIdx, initializer_list<wstring_view> texts) const
+int ListView::Items::add(int iconIdx, initializer_list<wstring_view> texts) const
 {
 	LVITEMW lvi = {0};
 	lvi.mask = LVIF_TEXT | (iconIdx == -1 ? 0 : LVIF_IMAGE);
@@ -91,39 +86,15 @@ UINT ListView::Items::add(int iconIdx, initializer_list<wstring_view> texts) con
 	return newIdx;
 }
 
-void ListView::Items::remove(int index) const
+size_t ListView::Items::count() const
 {
-	if (!SendMessageW(this->lv.hWnd(), LVM_DELETEITEM, index, 0)) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_DELETEITEM failed");
-	}
-}
-
-void ListView::Items::selectAll(bool doSelect) const
-{
-	LVITEMW lvi = {0};
-	lvi.stateMask = LVIS_SELECTED;
-	lvi.state = doSelect ? LVIS_SELECTED : 0;
-
-	if (!SendMessageW(this->lv.hWnd(), LVM_SETITEMSTATE, -1, (LPARAM)&lvi)) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed.");
-	}
+	return (size_t)SendMessageW(this->lv.hWnd(), LVM_GETITEMCOUNT, 0, 0);
 }
 
 optional<int> ListView::Items::focused() const
 {
 	int idx = (int)SendMessageW(this->lv.hWnd(), LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
 	return idx == -1 ? std::nullopt : optional{idx};
-}
-
-void ListView::Items::setFocused(int index) const
-{
-	LVITEMW lvi = {0};
-	lvi.stateMask = LVIS_FOCUSED;
-	lvi.state = LVIS_FOCUSED;
-
-	if (SendMessageW(this->lv.hWnd(), LVM_SETITEMSTATE, index, (LPARAM)&lvi) == -1) {
-		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed.");
-	}
 }
 
 bool ListView::Items::isVisible(int index) const
@@ -142,12 +113,46 @@ RECT ListView::Items::rect(int index, int lvirPortion) const
 	return rc;
 }
 
-ListView& ListView::operator=(const ListView& other) noexcept
+void ListView::Items::remove(int index) const
+{
+	if (!SendMessageW(this->lv.hWnd(), LVM_DELETEITEM, index, 0)) {
+		throw system_error(GetLastError(), std::system_category(), "LVM_DELETEITEM failed");
+	}
+}
+
+void ListView::Items::selectAll(bool doSelect) const
+{
+	LVITEMW lvi = {0};
+	lvi.stateMask = LVIS_SELECTED;
+	lvi.state = doSelect ? LVIS_SELECTED : 0;
+
+	if (!SendMessageW(this->lv.hWnd(), LVM_SETITEMSTATE, -1, (LPARAM)&lvi)) {
+		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed.");
+	}
+}
+
+void ListView::Items::setFocused(int index) const
+{
+	LVITEMW lvi = {0};
+	lvi.stateMask = LVIS_FOCUSED;
+	lvi.state = LVIS_FOCUSED;
+
+	if (SendMessageW(this->lv.hWnd(), LVM_SETITEMSTATE, index, (LPARAM)&lvi) == -1) {
+		throw system_error(GetLastError(), std::system_category(), "LVM_SETITEMSTATE failed.");
+	}
+}
+
+ListView& ListView::operator=(const ListView& other)
 {
 	this->NativeControl::operator=(other);
 	this->contextMenu = other.contextMenu;
 	// Note that "columns" and "items" remain the same, pointing to "this".
 	return *this;
+}
+
+int ListView::ctrlId() const
+{
+	return GetDlgCtrlID(this->hWnd());
 }
 
 bool ListView::onWmNotify(LPARAM lp) const
@@ -187,6 +192,11 @@ void ListView::setExtendedStyle(bool set, DWORD exStyles) const
 void ListView::setImageList(const ImageList& imgLst, DWORD normalOrSmall) const
 {
 	SendMessageW(this->hWnd(), LVM_SETIMAGELIST, normalOrSmall, (LPARAM)imgLst.hImageList());
+}
+
+void ListView::setRedraw(bool doRedraw) const
+{
+	SendMessageW(this->hWnd(), WM_SETREDRAW, (WPARAM)(BOOL)doRedraw, 0);
 }
 
 void ListView::showContextMenu(bool followCursor, bool hasCtrl, bool hasShift) const

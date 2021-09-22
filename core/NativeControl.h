@@ -9,10 +9,10 @@ class NativeControl : public Window {
 public:
 	virtual ~NativeControl() { }
 
-	constexpr NativeControl(const NativeControl& other) noexcept : Window{other} { }
-	constexpr NativeControl& operator=(const NativeControl& other) noexcept { this->Window::operator=(other); return *this; }
+	constexpr NativeControl(const NativeControl& other) : Window{other} { }
+	constexpr NativeControl& operator=(const NativeControl& other) { this->Window::operator=(other); return *this; }
 
-	explicit constexpr NativeControl(HWND hCtrl) noexcept : Window{hCtrl} { }
+	explicit constexpr NativeControl(HWND hCtrl) : Window{hCtrl} { }
 	NativeControl(HWND hParent, int ctrlId);
 };
 

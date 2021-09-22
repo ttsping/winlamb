@@ -27,20 +27,20 @@ private:
 public:
 	~ComPtr() { this->release(); }
 
-	constexpr ComPtr(ComPtr&& other) noexcept : ptr{nullptr} { std::swap(this->ptr, other.ptr); }
-	ComPtr& operator=(ComPtr&& other) noexcept;
+	constexpr ComPtr(ComPtr&& other) : ptr{nullptr} { std::swap(this->ptr, other.ptr); }
+	ComPtr& operator=(ComPtr&& other);
 
-	constexpr ComPtr() noexcept : ptr{nullptr} { }
+	constexpr ComPtr() : ptr{nullptr} { }
 	explicit ComPtr(REFCLSID clsid_something, DWORD clsContext = CLSCTX_INPROC_SERVER);
 	ComPtr(REFCLSID clsid_something, REFIID iid_something, DWORD clsContext = CLSCTX_INPROC_SERVER);
 
-	void release() noexcept;
-	constexpr operator const T*() const noexcept { return this->ptr; }
-	constexpr operator T*() noexcept { return this->ptr; }
-	constexpr const T* operator->() const noexcept { return this->ptr; }
-	constexpr T* operator->() noexcept { return this->ptr; }
-	constexpr const T** operator&() const noexcept { return &this->ptr; }
-	constexpr T** operator&() noexcept { return &this->ptr; }
+	void release();
+	constexpr operator const T*() const { return this->ptr; }
+	constexpr operator T*() { return this->ptr; }
+	constexpr const T* operator->() const { return this->ptr; }
+	constexpr T* operator->() { return this->ptr; }
+	constexpr const T** operator&() const { return &this->ptr; }
+	constexpr T** operator&() { return &this->ptr; }
 
 	template<IUnknownDerived Q> ComPtr<Q> queryInterface();
 	template<IUnknownDerived Q> ComPtr<Q> queryInterface(REFIID iid_something);
@@ -67,7 +67,7 @@ ComPtr<T>::ComPtr(REFCLSID clsid_something, REFIID iid_something, DWORD clsConte
 }
 
 template<IUnknownDerived T>
-ComPtr<T>& ComPtr<T>::operator=(ComPtr&& other) noexcept
+ComPtr<T>& ComPtr<T>::operator=(ComPtr&& other)
 {
 	this->release();
 	std::swap(this->ptr, other.ptr);
@@ -75,7 +75,7 @@ ComPtr<T>& ComPtr<T>::operator=(ComPtr&& other) noexcept
 }
 
 template<IUnknownDerived T>
-void ComPtr<T>::release() noexcept
+void ComPtr<T>::release()
 {
 	if (this->ptr) {
 		this->ptr->Release();

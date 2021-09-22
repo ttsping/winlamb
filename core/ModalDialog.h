@@ -9,7 +9,7 @@ class ModalDialog : public Dialog {
 public:
 	virtual ~ModalDialog() { }
 
-	explicit constexpr ModalDialog(int dialogId) noexcept
+	explicit constexpr ModalDialog(int dialogId)
 		: Dialog{dialogId} { }
 
 	virtual INT_PTR show(Window* parent);

@@ -22,18 +22,18 @@ private:
 public:
 	~FileMapped() { this->close(); }
 
-	constexpr FileMapped(FileMapped&& other) noexcept;
-	FileMapped& operator=(FileMapped&& other) noexcept;
+	constexpr FileMapped(FileMapped&& other);
+	FileMapped& operator=(FileMapped&& other);
 
 	FileMapped(std::wstring_view filePath, Access access);
 
-	void close() noexcept;
-	[[nodiscard]] constexpr size_t size() const noexcept { return this->sz; }
+	void close();
+	[[nodiscard]] constexpr std::span<const BYTE> hotSpan() const { return std::span{(const BYTE*)this->pMem, this->sz}; }
+	[[nodiscard]] constexpr std::span<BYTE> hotSpan() { return std::span{(BYTE*)this->pMem, this->sz}; }
 	void resize(size_t newSize);
-	[[nodiscard]] constexpr std::span<const BYTE> hotSpan() const noexcept { return std::span{(const BYTE*)this->pMem, this->sz}; }
-	[[nodiscard]] constexpr std::span<BYTE> hotSpan() noexcept { return std::span{(BYTE*)this->pMem, this->sz}; }
-	[[nodiscard]] std::vector<BYTE> readChunk(size_t offset, size_t numBytes) const;
 	[[nodiscard]] std::vector<BYTE> readAll() const { return this->readChunk(0, this->sz); }
+	[[nodiscard]] std::vector<BYTE> readChunk(size_t offset, size_t numBytes) const;
+	[[nodiscard]] constexpr size_t size() const { return this->sz; }
 
 private:
 	void mapInMemory();

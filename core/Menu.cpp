@@ -15,17 +15,12 @@ Menu::Menu(int menuId, optional<HINSTANCE> hInst)
 	}
 }
 
-void Menu::destroy() noexcept
+void Menu::destroy()
 {
 	if (this->hm) {
 		DestroyMenu(this->hm);
 		this->hm = nullptr;
 	}
-}
-
-Menu Menu::subMenu(UINT pos) const noexcept
-{
-	return Menu{GetSubMenu(this->hm, pos)};
 }
 
 void Menu::showAtPoint(POINT pos, HWND hParent, optional<HWND> hCoordsRelativeTo) const
@@ -34,4 +29,9 @@ void Menu::showAtPoint(POINT pos, HWND hParent, optional<HWND> hCoordsRelativeTo
 	SetForegroundWindow(hParent);
 	TrackPopupMenu(this->hm, TPM_LEFTBUTTON, pos.x, pos.y, 0, hParent, nullptr);
 	PostMessageW(hParent, WM_NULL, 0, 0); // necessary according to TrackMenuPopup docs
+}
+
+Menu Menu::subMenu(UINT pos) const
+{
+	return Menu{GetSubMenu(this->hm, pos)};
 }

@@ -12,18 +12,18 @@ private:
 
 public:
 	~Font() { this->destroy(); }
-	
-	constexpr Font(Font&& other) noexcept : hf{nullptr} { std::swap(this->hf, other.hf); }
-	Font& operator=(Font&& other) noexcept;
 
-	explicit constexpr Font(HFONT hf) noexcept : hf{hf} { }
-	Font& operator=(HFONT hf) noexcept;
+	constexpr Font(Font&& other) : hf{nullptr} { std::swap(this->hf, other.hf); }
+	Font& operator=(Font&& other);
+
+	explicit constexpr Font(HFONT hf) : hf{hf} { }
+	Font& operator=(HFONT hf);
 
 	explicit Font(const LOGFONT& lf);
 
-	void destroy() noexcept;
-	[[nodiscard]] constexpr HFONT hFont() const { return this->hf; }
+	void destroy();
 	void getObject(LOGFONT& lf) const;
+	[[nodiscard]] constexpr HFONT hFont() const { return this->hf; }
 
 	static const Font& UiFont();
 };

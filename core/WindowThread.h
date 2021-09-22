@@ -15,8 +15,8 @@ class WindowThread : public Window {
 
 public:
 	virtual ~WindowThread() { }
-	
-	constexpr WindowThread() noexcept : Window{} { }
+
+	constexpr WindowThread() : Window{} { }
 
 	// Runs code asynchronously in a new detached thread.
 	void runDetachedThread(std::function<void()> func) const;
@@ -28,7 +28,7 @@ public:
 	void runUiThread(std::function<void()> func) const;
 
 private:
-	[[nodiscard]] bool processUiThreadMsg(UINT msg, WPARAM wp, LPARAM lp) const noexcept;
+	[[nodiscard]] bool processUiThreadMsg(UINT msg, WPARAM wp, LPARAM lp) const;
 };
 
 }
