@@ -23,10 +23,16 @@ namespace wl::str {
 /// @param args Arguments to the format placements.
 /// @return New string.
 /// @see https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/sprintf-sprintf-l-swprintf-swprintf-l-swprintf-l
-template<typename ...argsT>
-[[nodiscard]] inline std::wstring format(std::wstring_view strFormat, const argsT&... args)
-{
-	return _wli::str_aux::format_raw(strFormat, std::forward<const argsT&>(args)...);
+// template<typename ...argsT>
+// [[nodiscard]] inline std::wstring format(std::wstring_view strFormat, const argsT&... args)
+// {
+// 	return _wli::str_aux::format_raw(strFormat, std::forward<const argsT&>(args)...);
+// }
+
+// Type-safe sprintf.
+template<typename CharT, typename T = typename std::basic_string<CharT>, typename... Args>
+inline T format(const CharT* fmt, const Args&... args) {
+    return _wli::str_aux::format_raw<T>(fmt, std::forward<const Args&>(args)...);
 }
 
 /// OutputDebugString() with type-safe sprintf, which also accepts wstring and wstring_view as argument.
