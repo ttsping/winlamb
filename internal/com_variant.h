@@ -7,8 +7,9 @@
 #pragma once
 #include <stdexcept>
 #include <string_view>
-#include <Windows.h>
-#include <OleAuto.h>
+#include <windows.h>
+#include <oleAuto.h>
+#include "base_priv.h"
 
 namespace wl::com {
 
@@ -17,193 +18,178 @@ namespace wl::com {
 /// #include <com.h>
 /// @see https://docs.microsoft.com/en-us/windows/win32/winauto/variant-structure
 class variant final {
-private:
-	VARIANT _vari{};
+  private:
+    VARIANT _vari{};
 
-public:
-	/// Destructor. Calls clear().
-	~variant() { this->clear(); }
+  public:
+    /// Destructor. Calls clear().
+    ~variant() { this->clear(); }
 
-	/// Default constructor.
-	variant() = default;
+    /// Default constructor.
+    variant() { VariantInit(&_vari); };
 
-	/// Move constructor.
-	variant(variant&& other) noexcept { this->operator=(std::move(other)); }
+    /// Move constructor.
+    variant(variant&& other) noexcept { this->operator=(std::move(other)); }
 
-	/// Automatic conversion to VARIANT& type.
-	[[nodiscard]] operator const VARIANT&() const noexcept { return this->_vari; }
+    /// Automatic conversion to VARIANT& type.
+    NODISCARD operator const VARIANT&() const noexcept { return this->_vari; }
 
-	/// Returns the underlying VARIANT pointer.
-	[[nodiscard]] const VARIANT* operator&() const noexcept { return &this->_vari; }
-	/// Returns the underlying VARIANT pointer.
-	[[nodiscard]] VARIANT*       operator&() noexcept       { return &this->_vari; }
+    /// Returns the underlying VARIANT pointer.
+    NODISCARD const VARIANT* operator&() const noexcept { return &this->_vari; }
+    /// Returns the underlying VARIANT pointer.
+    NODISCARD VARIANT* operator&() noexcept { return &this->_vari; }
 
-	/// Move assignment operator.
-	variant& operator=(variant&& other) noexcept
-	{
-		this->clear();
-		std::swap(this->_vari, other._vari);
-		return *this;
-	}
+    /// Move assignment operator.
+    variant& operator=(variant&& other) noexcept {
+        this->clear();
+        std::swap(this->_vari, other._vari);
+        return *this;
+    }
 
-	/// Clears the current stored value with VariantClear().
-	/// @see https://docs.microsoft.com/en-us/windows/win32/api/oleauto/nf-oleauto-variantclear
-	variant& clear() noexcept
-	{
-		if (this->_vari.vt != VT_EMPTY) {
-			VariantClear(&this->_vari); // will set VT_EMPTY
-		}
-		return *this;
-	}
+    /// Clears the current stored value with VariantClear().
+    /// @see https://docs.microsoft.com/en-us/windows/win32/api/oleauto/nf-oleauto-variantclear
+    variant& clear() noexcept {
+        if (this->_vari.vt != VT_EMPTY) {
+            VariantClear(&this->_vari);  // will set VT_EMPTY
+        }
+        return *this;
+    }
 
-	/// Stores a boolean value.
-	variant& set_boolean(bool b) noexcept
-	{
-		return this->_set_num(VT_BOOL, this->_vari.boolVal,
-			b ? VARIANT_TRUE : VARIANT_FALSE);
-	}
+    /// <summary>
+    /// make a copy variant
+    /// </summary>
+    /// <returns></returns>
+    NODISCARD FORCEINLINE variant clone() const {
+        variant v;
+        VariantCopy(&v._vari, &_vari);
+        return v;
+    }
 
-	/// Retrieves a stored boolean value.
-	/// Throws exception if the stored type is different.
-	[[nodiscard]] bool boolean() const
-	{
-		if (this->_vari.vt != VT_BOOL) {
-			throw std::invalid_argument("Variant doesn't hold a boolean in " __FUNCTION__ "().");
-		}
-		return this->_vari.boolVal != VARIANT_FALSE;
-	}
+    NODISCARD FORCEINLINE VARTYPE type() const { return _vari.vt; }
 
-	/// Stores a BYTE value.
-	variant& set_byte(BYTE n) noexcept { return this->_set_num(VT_UI1, this->_vari.bVal, n); }
+    /// Stores a boolean value.
+    variant& set_boolean(bool b) noexcept { return this->_set_num(VT_BOOL, this->_vari.boolVal, b ? VARIANT_TRUE : VARIANT_FALSE); }
 
-	/// Retrieves a stored BYTE value.
-	/// Throws exception if the stored type is different.
-	[[nodiscard]] BYTE byte() const
-	{
-		if (this->_vari.vt != VT_UI1) {
-			throw std::invalid_argument("Variant doesn't hold a BYTE in " __FUNCTION__ "().");
-		}
-		return this->_vari.bVal;
-	}
+    /// Retrieves a stored boolean value.
+    /// Throws exception if the stored type is different.
+    NODISCARD bool boolean() const {
+        if (this->_vari.vt != VT_BOOL) {
+            throw std::invalid_argument("Variant doesn't hold a boolean in " __FUNCTION__ "().");
+        }
+        return this->_vari.boolVal != VARIANT_FALSE;
+    }
 
-	/// Stores a 16-bit int value.
-	variant& set_int16(short n) noexcept { return this->_set_num(VT_I2, this->_vari.iVal, n); }
+    /// Stores a BYTE value.
+    variant& set_byte(BYTE n) noexcept { return this->_set_num(VT_UI1, this->_vari.bVal, n); }
 
-	/// Retrieves a stored 16-bit int value.
-	/// Throws exception if the stored type is different.
-	[[nodiscard]] short int16() const
-	{
-		if (this->_vari.vt != VT_I2) {
-			throw std::invalid_argument("Variant doesn't hold a 16-bit int in " __FUNCTION__ "().");
-		}
-		return this->_vari.iVal;
-	}
+    /// Retrieves a stored BYTE value.
+    /// Throws exception if the stored type is different.
+    NODISCARD BYTE byte() const {
+        if (this->_vari.vt != VT_UI1) {
+            throw std::invalid_argument("Variant doesn't hold a BYTE in " __FUNCTION__ "().");
+        }
+        return this->_vari.bVal;
+    }
 
-	/// Stores an unsigned 16-bit int value.
-	variant& set_uint16(unsigned short n) noexcept { return this->_set_num(VT_UI2, this->_vari.uiVal, n); }
+    /// Stores a 16-bit int value.
+    variant& set_int16(short n) noexcept { return this->_set_num(VT_I2, this->_vari.iVal, n); }
 
-	/// Retrieves a stored unsigned 16-bit int value.
-	/// Throws exception if the stored type is different.
-	[[nodiscard]] unsigned short uint16() const
-	{
-		if (this->_vari.vt != VT_UI2) {
-			throw std::invalid_argument("Variant doesn't hold an unsigned 16-bit int in " __FUNCTION__ "().");
-		}
-		return this->_vari.uiVal;
-	}
+    /// Retrieves a stored 16-bit int value.
+    /// Throws exception if the stored type is different.
+    NODISCARD short int16() const {
+        if (this->_vari.vt != VT_I2) {
+            throw std::invalid_argument("Variant doesn't hold a 16-bit int in " __FUNCTION__ "().");
+        }
+        return this->_vari.iVal;
+    }
 
-	/// Stores a 32-bit int value.
-	variant& set_int32(int n) noexcept { return this->_set_num(VT_I4, this->_vari.intVal, n); }
+    /// Stores an unsigned 16-bit int value.
+    variant& set_uint16(unsigned short n) noexcept { return this->_set_num(VT_UI2, this->_vari.uiVal, n); }
 
-	/// Retrieves a stored 32-bit int value.
-	/// Throws exception if the stored type is different.
-	[[nodiscard]] int int32() const
-	{
-		if (this->_vari.vt != VT_I4) {
-			throw std::invalid_argument("Variant doesn't hold a 32-bit int in " __FUNCTION__ "().");
-		}
-		return this->_vari.intVal;
-	}
+    /// Retrieves a stored unsigned 16-bit int value.
+    /// Throws exception if the stored type is different.
+    NODISCARD unsigned short uint16() const {
+        if (this->_vari.vt != VT_UI2) {
+            throw std::invalid_argument("Variant doesn't hold an unsigned 16-bit int in " __FUNCTION__ "().");
+        }
+        return this->_vari.uiVal;
+    }
 
-	/// Stores an unsigned 32-bit int value.
-	variant& set_uint32(unsigned int n) noexcept { return this->_set_num(VT_UI4, this->_vari.uintVal, n); }
+    /// Stores a 32-bit int value.
+    variant& set_int32(int n) noexcept { return this->_set_num(VT_I4, this->_vari.intVal, n); }
 
-	/// Retrieves a stored unsigned 32-bit int value.
-	/// Throws exception if the stored type is different.
-	[[nodiscard]] unsigned int uint32() const
-	{
-		if (this->_vari.vt != VT_UI4) {
-			throw std::invalid_argument("Variant doesn't hold an unsigned 32-bit int in " __FUNCTION__ "().");
-		}
-		return this->_vari.uintVal;
-	}
+    /// Retrieves a stored 32-bit int value.
+    /// Throws exception if the stored type is different.
+    NODISCARD int int32() const {
+        if (this->_vari.vt != VT_I4) {
+            throw std::invalid_argument("Variant doesn't hold a 32-bit int in " __FUNCTION__ "().");
+        }
+        return this->_vari.intVal;
+    }
 
-	/// Stores a string value.
-	variant& set_str(std::wstring_view s) noexcept
-	{
-		this->clear();
-		this->_vari.vt = VT_BSTR;
-		this->_vari.bstrVal = SysAllocString(s.data());
-		return *this;
-	}
+    /// Stores an unsigned 32-bit int value.
+    variant& set_uint32(unsigned int n) noexcept { return this->_set_num(VT_UI4, this->_vari.uintVal, n); }
 
-	/// Retrieves a stored string value.
-	/// Throws exception if the stored type is different.
-	[[nodiscard]] const wchar_t* str() const
-	{
-		if (this->_vari.vt != VT_BSTR) {
-			throw std::invalid_argument("Variant doesn't hold a string in " __FUNCTION__ "().");
-		}
-		return this->_vari.bstrVal;
-	}
+    /// Retrieves a stored unsigned 32-bit int value.
+    /// Throws exception if the stored type is different.
+    NODISCARD unsigned int uint32() const {
+        if (this->_vari.vt != VT_UI4) {
+            throw std::invalid_argument("Variant doesn't hold an unsigned 32-bit int in " __FUNCTION__ "().");
+        }
+        return this->_vari.uintVal;
+    }
 
-	/// Calls QueryInterface() on a COM pointer to query another COM pointer, which
-	/// must inherit from IDispatch. The queried pointer is stored inside the variant.
-	/// @see https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-queryinterface(refiid_void)
-	/// @see https://docs.microsoft.com/en-us/windows/win32/api/oaidl/nn-oaidl-idispatch
-	template<typename T,
-		typename = std::enable_if_t<
-			std::is_base_of_v<IUnknown, T>
-		>>
-	variant& set_query_idispatch(ptr<T>& objToQueryFrom, REFIID iid_idispatch)
-	{
-		this->clear();
-		this->_vari.vt = VT_DISPATCH;
+    /// Stores a string value.
+    variant& set_str(std::wstring_view s) noexcept {
+        this->clear();
+        this->_vari.vt = VT_BSTR;
+        this->_vari.bstrVal = SysAllocString(s.data());
+        return *this;
+    }
 
-		if (HRESULT hr = objToQueryFrom->QueryInterface(
-				iid_idispatch, reinterpret_cast<void**>(&this->_vari.pdispVal));
-			FAILED(hr))
-		{
-			throw std::system_error(hr, std::system_category(),
-				"QueryInterface() failed in " __FUNCTION__ "().");
-		}
-		return *this;
-	}
+    /// Retrieves a stored string value.
+    /// Throws exception if the stored type is different.
+    NODISCARD const wchar_t* str() const {
+        if (this->_vari.vt != VT_BSTR) {
+            throw std::invalid_argument("Variant doesn't hold a string in " __FUNCTION__ "().");
+        }
+        return this->_vari.bstrVal;
+    }
 
-	/// Retrieves the COM pointer which inherits from IDispatch.
-	/// Throws exception if the stored type is different.
-	/// @see https://docs.microsoft.com/en-us/windows/win32/api/oaidl/nn-oaidl-idispatch
-	 template<typename D,
-		typename = std::enable_if_t<
-			std::is_base_of_v<IDispatch, D>
-		>>
-	[[nodiscard]] D* idispatch() const
-	{
-		if (this->_vari.vt != VT_DISPATCH) {
-			throw std::invalid_argument("Variant doesn't hold an IDispatch in " __FUNCTION__ "().");
-		}
-		return this->_vari.pdispVal;
-	}
+    /// Calls QueryInterface() on a COM pointer to query another COM pointer, which
+    /// must inherit from IDispatch. The queried pointer is stored inside the variant.
+    /// @see https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-queryinterface(refiid_void)
+    /// @see https://docs.microsoft.com/en-us/windows/win32/api/oaidl/nn-oaidl-idispatch
+    template<typename T, typename = std::enable_if_t<std::is_base_of_v<IUnknown, T>>>
+    variant& set_query_idispatch(ptr<T>& objToQueryFrom, REFIID iid_idispatch) {
+        this->clear();
+        this->_vari.vt = VT_DISPATCH;
 
-private:
-	template<typename T>
-	variant& _set_num(VARTYPE vt, T& dest, T val) noexcept
-	{
-		this->clear();
-		this->_vari.vt = vt;
-		dest = val;
-		return *this;
-	}
+        if (HRESULT hr = objToQueryFrom->QueryInterface(iid_idispatch, reinterpret_cast<void**>(&this->_vari.pdispVal)); FAILED(hr)) {
+            throw std::system_error(hr, std::system_category(), "QueryInterface() failed in " __FUNCTION__ "().");
+        }
+        return *this;
+    }
+
+    /// Retrieves the COM pointer which inherits from IDispatch.
+    /// Throws exception if the stored type is different.
+    /// @see https://docs.microsoft.com/en-us/windows/win32/api/oaidl/nn-oaidl-idispatch
+    template<typename D, typename = std::enable_if_t<std::is_base_of_v<IDispatch, D>>>
+    NODISCARD D* idispatch() const {
+        if (this->_vari.vt != VT_DISPATCH) {
+            throw std::invalid_argument("Variant doesn't hold an IDispatch in " __FUNCTION__ "().");
+        }
+        return this->_vari.pdispVal;
+    }
+
+  private:
+    template<typename T>
+    variant& _set_num(VARTYPE vt, T& dest, T val) noexcept {
+        this->clear();
+        this->_vari.vt = vt;
+        dest = val;
+        return *this;
+    }
 };
 
-}//namespace wl::com
+}  // namespace wl::com
